@@ -10,9 +10,9 @@ interface Props {
 
 const SWIPE_THRESHOLD = 72
 
-function TrashIcon() {
+function TrashIcon({ size = 20 }: { size?: number }) {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <polyline points="3 6 5 6 21 6" />
       <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
       <path d="M10 11v6M14 11v6" />
@@ -101,10 +101,10 @@ export function TOTPCard({ account, onDelete }: Props) {
   }
 
   return (
-    <div className="relative overflow-hidden rounded-2xl">
-      {/* Delete zone */}
+    <div className="group relative overflow-hidden rounded-2xl">
+      {/* Swipe delete zone — touch / mobile only */}
       <div
-        className="absolute inset-y-0 right-0 flex flex-col items-center justify-center gap-1"
+        className="sm:hidden absolute inset-y-0 right-0 flex flex-col items-center justify-center gap-1"
         style={{
           background: 'linear-gradient(135deg, #dc2626, #b91c1c)',
           width: SWIPE_THRESHOLD + 16,
@@ -119,6 +119,20 @@ export function TOTPCard({ account, onDelete }: Props) {
           <span className="text-xs font-medium">Delete</span>
         </button>
       </div>
+
+      {/* Hover delete button — desktop only */}
+      <button
+        className="hidden sm:flex absolute top-2.5 right-2.5 z-10 items-center justify-center w-7 h-7 rounded-lg opacity-0 group-hover:opacity-100 transition-all active:scale-90"
+        style={{
+          background: 'rgba(220,38,38,0.1)',
+          border: '1px solid rgba(220,38,38,0.2)',
+          color: '#dc2626',
+        }}
+        onClick={e => { e.stopPropagation(); onDelete(account.id) }}
+        title="Delete account"
+      >
+        <TrashIcon size={14} />
+      </button>
 
       {/* Glass card */}
       <div
