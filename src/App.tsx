@@ -164,25 +164,6 @@ function PillSyncDot({ syncing, synced, drifted, offset }: {
   return null
 }
 
-// ── Shared icon button for content toolbar ───────────────────────────────────
-function ToolBtn({ onClick, title, active = false, children }: {
-  onClick: () => void; title: string; active?: boolean; children: React.ReactNode
-}) {
-  return (
-    <button
-      onClick={onClick}
-      title={title}
-      className="flex items-center justify-center w-8 h-8 rounded-xl transition-all hover:opacity-80 active:scale-95"
-      style={{
-        background: active ? 'rgba(0,194,255,0.12)' : 'rgba(255,255,255,0.05)',
-        color: active ? '#00c2ff' : 'rgba(241,245,249,0.4)',
-      }}
-    >
-      {children}
-    </button>
-  )
-}
-
 // ── Background mesh ──────────────────────────────────────────────────────────
 function Background() {
   return (
@@ -443,29 +424,44 @@ export default function App() {
                     </p>
                   </div>
 
-                  {/* Actions */}
-                  <div className="flex items-center gap-2">
+                  {/* Actions — grouped in a single frosted pill */}
+                  <div
+                    className="flex items-center"
+                    style={{
+                      background: 'rgba(8,14,28,0.72)',
+                      backdropFilter: 'blur(20px)',
+                      WebkitBackdropFilter: 'blur(20px)',
+                      border: '1px solid rgba(255,255,255,0.07)',
+                      borderRadius: 9999,
+                      padding: '3px 4px',
+                      gap: 2,
+                    }}
+                  >
+                    <input ref={importRef} type="file" accept=".json" onChange={handleImportFile} className="hidden" />
+
                     {/* Eye toggle */}
-                    <ToolBtn onClick={() => setCodesVisible(v => !v)} title={codesVisible ? 'Hide codes' : 'Show codes'} active={!codesVisible}>
-                      {codesVisible ? <EyeIcon /> : <EyeOffIcon />}
-                    </ToolBtn>
+                    {[
+                      { icon: codesVisible ? <EyeIcon /> : <EyeOffIcon />, action: () => setCodesVisible(v => !v), title: codesVisible ? 'Hide codes' : 'Show codes', active: !codesVisible },
+                      { icon: <ExportIcon />, action: handleExport, title: 'Export backup', active: false },
+                      { icon: <ImportIcon />, action: () => importRef.current?.click(), title: 'Import backup', active: false },
+                    ].map(({ icon, action, title, active }) => (
+                      <button
+                        key={title}
+                        onClick={action}
+                        title={title}
+                        className="flex items-center justify-center w-8 h-8 rounded-full transition-all hover:opacity-80 active:scale-95"
+                        style={{ color: active ? '#00c2ff' : 'rgba(241,245,249,0.38)', background: active ? 'rgba(0,194,255,0.1)' : 'transparent' }}
+                      >
+                        {icon}
+                      </button>
+                    ))}
 
-                    {/* Export */}
-                    <ToolBtn onClick={handleExport} title="Export backup">
-                      <ExportIcon />
-                    </ToolBtn>
+                    {/* Divider */}
+                    <div style={{ width: 1, height: 16, background: 'rgba(255,255,255,0.08)', margin: '0 2px', flexShrink: 0 }} />
 
-                    {/* Import */}
-                    <>
-                      <input ref={importRef} type="file" accept=".json" onChange={handleImportFile} className="hidden" />
-                      <ToolBtn onClick={() => importRef.current?.click()} title="Import backup">
-                        <ImportIcon />
-                      </ToolBtn>
-                    </>
-
-                    {/* Search */}
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'rgba(241,245,249,0.3)' }}>
+                    {/* Search — borderless inside the pill */}
+                    <div className="relative flex items-center">
+                      <span className="absolute left-2.5" style={{ color: 'rgba(241,245,249,0.28)', pointerEvents: 'none' }}>
                         <SearchIcon />
                       </span>
                       <input
@@ -473,13 +469,21 @@ export default function App() {
                         placeholder="Search…"
                         value={search}
                         onChange={e => setSearch(e.target.value)}
-                        className="aurora-input rounded-xl pl-8 pr-7 py-2 text-sm"
-                        style={{ width: 160 }}
+                        className="text-sm bg-transparent outline-none"
+                        style={{
+                          width: search ? 140 : 90,
+                          paddingLeft: 26,
+                          paddingRight: search ? 24 : 8,
+                          paddingTop: 6,
+                          paddingBottom: 6,
+                          color: '#f1f5f9',
+                          transition: 'width 0.2s ease',
+                        }}
                       />
                       {search && (
                         <button
                           onClick={() => setSearch('')}
-                          className="absolute right-2.5 top-1/2 -translate-y-1/2"
+                          className="absolute right-1.5 flex items-center justify-center transition-opacity hover:opacity-70"
                           style={{ color: 'rgba(241,245,249,0.3)' }}
                         >
                           <XIcon />
