@@ -70,6 +70,13 @@ function ClockWarnIcon() {
     </svg>
   )
 }
+function CheckIcon({ size = 13 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  )
+}
 function WifiOffIcon({ size = 11 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -111,6 +118,66 @@ function ImportIcon({ size = 16 }: { size?: number }) {
       <line x1="12" y1="3" x2="12" y2="15" />
     </svg>
   )
+}
+
+function SyncStatus({ syncing, synced, drifted, offset }: { syncing: boolean; synced: boolean; drifted: boolean; offset: number }) {
+  const [showCheck, setShowCheck] = useState(false)
+  const [checkOpacity, setCheckOpacity] = useState(1)
+
+  useEffect(() => {
+    if (synced && !drifted) {
+      setShowCheck(true)
+      setCheckOpacity(1)
+      const fadeTimer = setTimeout(() => setCheckOpacity(0), 2500)
+      const hideTimer = setTimeout(() => setShowCheck(false), 3000)
+      return () => { clearTimeout(fadeTimer); clearTimeout(hideTimer) }
+    }
+  }, [synced, drifted])
+
+  if (syncing) {
+    return (
+      <div
+        className="flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold animate-pulse"
+        style={{ background: 'rgba(0,194,255,0.08)', border: '1px solid rgba(0,194,255,0.15)', color: 'rgba(0,194,255,0.7)' }}
+      >
+        <svg width="6" height="6" viewBox="0 0 6 6"><circle cx="3" cy="3" r="3" fill="currentColor" /></svg>
+        Syncing…
+      </div>
+    )
+  }
+
+  if (drifted) {
+    return (
+      <div
+        className="flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold"
+        style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.22)', color: '#f59e0b' }}
+        title={`System clock is off by ~${Math.round(Math.abs(offset) / 1000)}s — codes may be incorrect`}
+      >
+        <ClockWarnIcon />
+        Clock drifted
+      </div>
+    )
+  }
+
+  if (showCheck) {
+    return (
+      <div
+        className="flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold"
+        style={{
+          background: 'rgba(16,185,129,0.08)',
+          border: '1px solid rgba(16,185,129,0.2)',
+          color: '#10b981',
+          opacity: checkOpacity,
+          transition: 'opacity 0.5s ease',
+        }}
+      >
+        <CheckIcon />
+        Clock synced
+      </div>
+    )
+  }
+
+  return null
 }
 
 const TABS: { key: Tab; label: string; icon: React.ReactNode }[] = [
@@ -397,15 +464,7 @@ export default function App() {
                 background: 'linear-gradient(135deg, #00c2ff, #a78bfa)',
                 WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
               }}>Heiyo Authenticator</h1>
-              {clockSync.drifted && (
-                <div
-                  className="flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold"
-                  style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.22)', color: '#f59e0b' }}
-                  title={`System clock is off by ~${Math.round(Math.abs(clockSync.offset) / 1000)}s`}
-                >
-                  <ClockWarnIcon />
-                </div>
-              )}
+              <SyncStatus syncing={clockSync.syncing} synced={clockSync.synced} drifted={clockSync.drifted} offset={clockSync.offset} />
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -486,16 +545,7 @@ export default function App() {
                 <h2 className="font-bold text-3xl" style={{ color: '#f1f5f9' }}>
                   {tab === 'vault' ? 'My Codes' : 'Developer Tools'}
                 </h2>
-                {tab === 'vault' && clockSync.drifted && (
-                  <div
-                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold"
-                    style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.22)', color: '#f59e0b' }}
-                    title={`System clock is off by ~${Math.round(Math.abs(clockSync.offset) / 1000)}s — codes may be incorrect`}
-                  >
-                    <ClockWarnIcon />
-                    Clock out of sync
-                  </div>
-                )}
+                <SyncStatus syncing={clockSync.syncing} synced={clockSync.synced} drifted={clockSync.drifted} offset={clockSync.offset} />
               </div>
               <p className="text-sm mt-1.5 font-medium" style={{ color: 'rgba(241,245,249,0.38)' }}>
                 {tab === 'vault'

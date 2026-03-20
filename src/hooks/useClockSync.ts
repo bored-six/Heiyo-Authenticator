@@ -6,6 +6,8 @@ const DRIFT_THRESHOLD_MS = 2_000
 export interface ClockSyncResult {
   /** Milliseconds to add to Date.now() to get true server time (0 if sync failed) */
   offset: number
+  /** True while the fetch is in-flight */
+  syncing: boolean
   /** True if the fetch succeeded and we have a measured offset */
   synced: boolean
   /** True when |offset| > DRIFT_THRESHOLD_MS — show warning to user */
@@ -22,6 +24,7 @@ export interface ClockSyncResult {
 export function useClockSync(): ClockSyncResult {
   const [result, setResult] = useState<ClockSyncResult>({
     offset: 0,
+    syncing: true,
     synced: false,
     drifted: false,
   })
@@ -39,19 +42,26 @@ export function useClockSync(): ClockSyncResult {
         const t2 = Date.now()
 
         const dateHeader = res.headers.get('Date')
-        if (!dateHeader) return // server didn't send Date header
+        if (!dateHeader) {
+          if (!cancelled) setResult(prev => ({ ...prev, syncing: false }))
+          return
+        }
 
         const serverTime = new Date(dateHeader).getTime()
-        if (isNaN(serverTime)) return
+        if (isNaN(serverTime)) {
+          if (!cancelled) setResult(prev => ({ ...prev, syncing: false }))
+          return
+        }
 
         // Estimate server time at moment t2 arrived, corrected for response travel time
         const rtt = t2 - t1
         const offset = Math.round(serverTime + rtt / 2 - t2)
         const drifted = Math.abs(offset) > DRIFT_THRESHOLD_MS
 
-        if (!cancelled) setResult({ offset, synced: true, drifted })
+        if (!cancelled) setResult({ offset, syncing: false, synced: true, drifted })
       } catch {
         // Network offline or fetch blocked — silently keep offset: 0
+        if (!cancelled) setResult(prev => ({ ...prev, syncing: false }))
       }
     }
 
