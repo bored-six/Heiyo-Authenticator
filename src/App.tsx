@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useAccounts } from './hooks/useAccounts'
-import { usePin } from './hooks/usePin'
 import { TOTPCard } from './components/TOTPCard'
 import { AddAccount } from './components/AddAccount'
 import { DevModule } from './components/DevModule'
-import { PinLock } from './components/PinLock'
 
 type Tab = 'vault' | 'dev'
 
@@ -45,14 +43,7 @@ function LockIcon() {
     </svg>
   )
 }
-function KeyIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="7.5" cy="15.5" r="5.5" />
-      <path d="M21 2l-9.6 9.6M15.5 7.5l2 2M18 5l2 2" />
-    </svg>
-  )
-}
+
 function SearchIcon() {
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -83,12 +74,9 @@ const TABS: { key: Tab; label: string; icon: React.ReactNode }[] = [
 
 export default function App() {
   const { accounts, addAccount, removeAccount } = useAccounts()
-  const { pinSet, locked, setPin, verifyPin, lock } = usePin()
-  const [tab, setTab]               = useState<Tab>('vault')
-  const [showAdd, setShowAdd]       = useState(false)
-  const [showSetPin, setShowSetPin] = useState(false)
-  const [pinError, setPinError]     = useState('')
-  const [search, setSearch]         = useState('')
+  const [tab, setTab]     = useState<Tab>('vault')
+  const [showAdd, setShowAdd] = useState(false)
+  const [search, setSearch]   = useState('')
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -103,25 +91,6 @@ export default function App() {
     a.name.toLowerCase().includes(search.toLowerCase()) ||
     a.issuer.toLowerCase().includes(search.toLowerCase())
   )
-
-  if (locked) {
-    return (
-      <PinLock mode="verify" error={pinError}
-        onSuccess={pin => {
-          if (!verifyPin(pin)) setPinError('Wrong PIN. Try again.')
-          else setPinError('')
-        }}
-      />
-    )
-  }
-  if (showSetPin) {
-    return (
-      <PinLock mode="set"
-        onSuccess={pin => { setPin(pin); setShowSetPin(false) }}
-        onCancel={() => setShowSetPin(false)}
-      />
-    )
-  }
 
   return (
     <>
@@ -262,17 +231,6 @@ export default function App() {
               }}>Heiyo Authenticator</h1>
             </div>
             <div className="flex items-center gap-2">
-              {pinSet ? (
-                <button onClick={lock} className="w-9 h-9 rounded-xl flex items-center justify-center transition-all"
-                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(241,245,249,0.7)' }}>
-                  <LockIcon />
-                </button>
-              ) : (
-                <button onClick={() => setShowSetPin(true)} className="w-9 h-9 rounded-xl flex items-center justify-center transition-all"
-                  style={{ background: 'rgba(0,194,255,0.1)', border: '1px solid rgba(0,194,255,0.2)', color: '#00c2ff' }}>
-                  <KeyIcon />
-                </button>
-              )}
               {tab === 'vault' && (
                 <button onClick={() => setShowAdd(true)} className="w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-95"
                   style={{ background: 'linear-gradient(135deg, #00c2ff, #0090ff)', boxShadow: '0 4px 12px rgba(0,194,255,0.35)', color: '#060b18' }}>
@@ -337,24 +295,6 @@ export default function App() {
                     </button>
                   )}
                 </div>
-              )}
-
-              {pinSet ? (
-                <button
-                  onClick={lock}
-                  className="flex items-center gap-2 px-4 h-10 rounded-xl text-sm font-semibold transition-all hover:opacity-80"
-                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(241,245,249,0.8)' }}
-                >
-                  <LockIcon /> Lock
-                </button>
-              ) : (
-                <button
-                  onClick={() => setShowSetPin(true)}
-                  className="flex items-center gap-2 px-4 h-10 rounded-xl text-sm font-semibold transition-all hover:opacity-80"
-                  style={{ background: 'rgba(0,194,255,0.08)', border: '1px solid rgba(0,194,255,0.2)', color: '#00c2ff' }}
-                >
-                  <KeyIcon /> Set PIN
-                </button>
               )}
 
               {tab === 'vault' && (
