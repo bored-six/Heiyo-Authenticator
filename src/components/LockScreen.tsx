@@ -8,9 +8,9 @@ interface Props {
   onReset: () => Promise<void>
 }
 
-function ShieldIcon() {
+function ShieldIcon({ size = 32 }: { size?: number }) {
   return (
-    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
     </svg>
   )
@@ -19,7 +19,8 @@ function ShieldIcon() {
 function EyeIcon() {
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" />
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+      <circle cx="12" cy="12" r="3" />
     </svg>
   )
 }
@@ -35,9 +36,20 @@ function EyeOffIcon() {
 
 function WarningIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}>
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}>
       <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
       <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
+    </svg>
+  )
+}
+
+function MigrateIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}>
+      <polyline points="17 1 21 5 17 9" />
+      <path d="M3 11V9a4 4 0 014-4h14" />
+      <polyline points="7 23 3 19 7 15" />
+      <path d="M21 13v2a4 4 0 01-4 4H3" />
     </svg>
   )
 }
@@ -46,17 +58,6 @@ function SpinnerIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="animate-spin">
       <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
-    </svg>
-  )
-}
-
-function MigrateIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}>
-      <polyline points="17 1 21 5 17 9" />
-      <path d="M3 11V9a4 4 0 014-4h14" />
-      <polyline points="7 23 3 19 7 15" />
-      <path d="M21 13v2a4 4 0 01-4 4H3" />
     </svg>
   )
 }
@@ -75,11 +76,9 @@ export function LockScreen({ mode, legacyCount = 0, onCreate, onUnlock, onReset 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
-
     if (!password) { setError('Password is required.'); return }
-
     if (isCreating) {
-      if (password.length < 8) { setError('Password must be at least 8 characters.'); return }
+      if (password.length < 8) { setError('Minimum 8 characters.'); return }
       if (password !== confirm) { setError('Passwords do not match.'); return }
       setLoading(true)
       try {
@@ -106,139 +105,147 @@ export function LockScreen({ mode, legacyCount = 0, onCreate, onUnlock, onReset 
   }
 
   const subtitle =
-    mode === 'unlock'  ? 'Enter your master password to unlock your vault.' :
-    mode === 'migrate' ? `Create a master password to secure your ${legacyCount} existing account${legacyCount !== 1 ? 's' : ''}.` :
+    mode === 'unlock'  ? 'Enter your master password to access your vault.' :
+    mode === 'migrate' ? `Secure your ${legacyCount} account${legacyCount !== 1 ? 's' : ''} with a master password.` :
                          'Create a master password to protect your 2FA secrets.'
+
+  const submitLabel =
+    loading
+      ? isCreating
+        ? mode === 'migrate' ? 'Encrypting…' : 'Creating vault…'
+        : 'Unlocking…'
+      : isCreating
+        ? mode === 'migrate' ? 'Encrypt & Migrate' : 'Create Vault'
+        : 'Unlock Vault'
 
   return (
     <>
-      <div className="fixed inset-0 pointer-events-none" style={{ background: '#060b18', zIndex: 0 }}>
+      {/* ── Background — deep night mesh ── */}
+      <div className="fixed inset-0" style={{ background: '#020617', zIndex: 0 }}>
+        {/* Blue blob — top-left */}
+        <div className="absolute" style={{
+          width: 600, height: 600, borderRadius: '50%',
+          background: 'rgba(0,194,255,0.08)', filter: 'blur(120px)',
+          top: -200, left: -150,
+        }} />
+        {/* Purple blob — bottom-right */}
+        <div className="absolute" style={{
+          width: 700, height: 700, borderRadius: '50%',
+          background: 'rgba(124,58,237,0.09)', filter: 'blur(140px)',
+          bottom: -250, right: -200,
+        }} />
         <div className="bg-glow" />
       </div>
 
-      <div className="fixed inset-0 z-10 flex items-center justify-center p-5">
-        <div
-          className="w-full max-w-sm rounded-3xl p-8"
-          style={{
-            background: 'rgba(8, 14, 28, 0.97)',
-            backdropFilter: 'blur(40px)',
-            WebkitBackdropFilter: 'blur(40px)',
-            border: '1px solid rgba(255,255,255,0.09)',
-            boxShadow: '0 24px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,194,255,0.06)',
-          }}
-        >
-          {/* Brand */}
-          <div className="flex flex-col items-center mb-7">
-            <div
-              className="w-16 h-16 rounded-3xl flex items-center justify-center mb-4"
-              style={{
-                background: 'linear-gradient(135deg, #00c2ff 0%, #0090ff 100%)',
-                boxShadow: '0 0 40px rgba(0, 194, 255, 0.4)',
-                color: '#060b18',
-              }}
-            >
-              <ShieldIcon />
-            </div>
-            <h1
-              className="text-2xl font-black mb-1.5"
-              style={{
-                background: 'linear-gradient(135deg, #00c2ff, #a78bfa)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-              }}
-            >
-              Heiyo Authenticator
-            </h1>
-            <p className="text-sm text-center leading-relaxed" style={{ color: 'rgba(241,245,249,0.42)', maxWidth: 280 }}>
-              {subtitle}
-            </p>
+      {/* ── Centered portal — no card, just floats ── */}
+      <div className="fixed inset-0 z-10 flex items-center justify-center px-5">
+        <div className="w-full flex flex-col items-center" style={{ maxWidth: 320 }}>
+
+          {/* Glowing shield icon */}
+          <div
+            className="flex items-center justify-center mb-7"
+            style={{
+              width: 88, height: 88, borderRadius: '50%',
+              background: 'radial-gradient(circle, rgba(0,194,255,0.18) 0%, rgba(0,100,200,0.04) 100%)',
+              border: '1px solid rgba(0,194,255,0.22)',
+              boxShadow: '0 0 48px rgba(0,194,255,0.45), 0 0 96px rgba(0,194,255,0.15)',
+              color: '#00c2ff',
+            }}
+          >
+            <ShieldIcon size={36} />
           </div>
 
+          {/* Title */}
+          <h1
+            className="text-2xl font-bold tracking-tight mb-2 text-center"
+            style={{
+              background: 'linear-gradient(135deg, #00c2ff, #a78bfa)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}
+          >
+            Heiyo Authenticator
+          </h1>
+
+          {/* Subtitle */}
+          <p
+            className="text-sm text-center mb-8 leading-relaxed"
+            style={{ color: 'rgba(241,245,249,0.38)', maxWidth: 280 }}
+          >
+            {subtitle}
+          </p>
+
           {/* Form */}
-          <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
-            {/* Password */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold px-1" style={{ color: 'rgba(241,245,249,0.45)' }}>
-                Master Password
-              </label>
+          <form onSubmit={handleSubmit} className="w-full flex flex-col gap-3">
+
+            {/* Password field */}
+            <div className="relative">
+              <input
+                type={showPw ? 'text' : 'password'}
+                value={password}
+                onChange={e => { setPassword(e.target.value); setError(null) }}
+                placeholder={isCreating ? 'At least 8 characters' : 'Master password'}
+                className="aurora-input w-full rounded-2xl px-4 py-3.5 text-sm pr-12"
+                autoFocus
+                autoComplete={isCreating ? 'new-password' : 'current-password'}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPw(v => !v)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 transition-opacity hover:opacity-70"
+                style={{ color: 'rgba(241,245,249,0.3)' }}
+              >
+                {showPw ? <EyeOffIcon /> : <EyeIcon />}
+              </button>
+            </div>
+
+            {/* Confirm field */}
+            {isCreating && (
               <div className="relative">
                 <input
-                  type={showPw ? 'text' : 'password'}
-                  value={password}
-                  onChange={e => { setPassword(e.target.value); setError(null) }}
-                  placeholder={isCreating ? 'At least 8 characters' : 'Enter your password'}
-                  className="aurora-input w-full rounded-xl px-4 py-3 text-sm pr-11"
-                  autoFocus
-                  autoComplete={isCreating ? 'new-password' : 'current-password'}
+                  type={showConfirm ? 'text' : 'password'}
+                  value={confirm}
+                  onChange={e => { setConfirm(e.target.value); setError(null) }}
+                  placeholder="Confirm password"
+                  className="aurora-input w-full rounded-2xl px-4 py-3.5 text-sm pr-12"
+                  autoComplete="new-password"
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPw(v => !v)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 transition-opacity hover:opacity-80"
-                  style={{ color: 'rgba(241,245,249,0.35)' }}
+                  onClick={() => setShowConfirm(v => !v)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 transition-opacity hover:opacity-70"
+                  style={{ color: 'rgba(241,245,249,0.3)' }}
                 >
-                  {showPw ? <EyeOffIcon /> : <EyeIcon />}
+                  {showConfirm ? <EyeOffIcon /> : <EyeIcon />}
                 </button>
-              </div>
-            </div>
-
-            {/* Confirm password (setup/migrate only) */}
-            {isCreating && (
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold px-1" style={{ color: 'rgba(241,245,249,0.45)' }}>
-                  Confirm Password
-                </label>
-                <div className="relative">
-                  <input
-                    type={showConfirm ? 'text' : 'password'}
-                    value={confirm}
-                    onChange={e => { setConfirm(e.target.value); setError(null) }}
-                    placeholder="Re-enter your password"
-                    className="aurora-input w-full rounded-xl px-4 py-3 text-sm pr-11"
-                    autoComplete="new-password"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirm(v => !v)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 transition-opacity hover:opacity-80"
-                    style={{ color: 'rgba(241,245,249,0.35)' }}
-                  >
-                    {showConfirm ? <EyeOffIcon /> : <EyeIcon />}
-                  </button>
-                </div>
               </div>
             )}
 
             {/* Error */}
             {error && (
-              <div
-                className="px-3 py-2.5 rounded-xl text-xs font-medium"
-                style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.2)', color: '#f87171' }}
-              >
-                {error}
-              </div>
+              <p className="text-xs px-1" style={{ color: '#f87171' }}>{error}</p>
             )}
 
-            {/* Migration info box */}
+            {/* Migration info */}
             {mode === 'migrate' && (
               <div
-                className="flex gap-2.5 px-3 py-3 rounded-xl text-xs"
-                style={{ background: 'rgba(0,194,255,0.06)', border: '1px solid rgba(0,194,255,0.15)', color: 'rgba(0,194,255,0.8)' }}
+                className="flex gap-2 px-3.5 py-3 rounded-2xl text-xs"
+                style={{ background: 'rgba(0,194,255,0.06)', color: 'rgba(0,194,255,0.75)' }}
               >
                 <MigrateIcon />
                 <span>Your existing accounts will be encrypted and migrated to secure storage.</span>
               </div>
             )}
 
-            {/* Warning (setup/migrate) */}
+            {/* Warning */}
             {isCreating && (
               <div
-                className="flex gap-2.5 px-3 py-3 rounded-xl text-xs"
-                style={{ background: 'rgba(245,158,11,0.07)', border: '1px solid rgba(245,158,11,0.15)', color: 'rgba(245,158,11,0.8)' }}
+                className="flex gap-2 px-3.5 py-3 rounded-2xl text-xs"
+                style={{ background: 'rgba(245,158,11,0.06)', color: 'rgba(245,158,11,0.75)' }}
               >
                 <WarningIcon />
-                <span>We do not store your password. If you lose it, your accounts <strong>cannot</strong> be recovered.</span>
+                <span>We cannot recover your password. If lost, your accounts are gone.</span>
               </div>
             )}
 
@@ -246,58 +253,48 @@ export function LockScreen({ mode, legacyCount = 0, onCreate, onUnlock, onReset 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3.5 rounded-xl font-bold text-sm mt-0.5 transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
-              style={{
-                background: 'linear-gradient(135deg, #00c2ff 0%, #0090ff 100%)',
-                boxShadow: loading ? 'none' : '0 4px 20px rgba(0,194,255,0.3)',
-                color: '#060b18',
-              }}
+              className="btn-glow w-full py-3.5 rounded-2xl text-sm mt-1"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
                   <SpinnerIcon />
-                  {isCreating ? (mode === 'migrate' ? 'Encrypting & migrating…' : 'Creating vault…') : 'Unlocking…'}
+                  {submitLabel}
                 </span>
-              ) : (
-                isCreating ? (mode === 'migrate' ? 'Encrypt & Migrate' : 'Create Vault') : 'Unlock Vault'
-              )}
+              ) : submitLabel}
             </button>
           </form>
 
-          {/* Forgot password — unlock mode only */}
+          {/* Forgot password */}
           {mode === 'unlock' && (
-            <div className="mt-5">
+            <div className="mt-7 w-full">
               {!showReset ? (
                 <div className="text-center">
                   <button
                     onClick={() => setShowReset(true)}
-                    className="text-xs transition-opacity hover:opacity-80"
-                    style={{ color: 'rgba(241,245,249,0.28)' }}
+                    className="text-xs transition-opacity hover:opacity-70"
+                    style={{ color: 'rgba(241,245,249,0.2)' }}
                   >
                     Forgot password?
                   </button>
                 </div>
               ) : (
-                <div
-                  className="rounded-2xl p-4"
-                  style={{ background: 'rgba(220,38,38,0.07)', border: '1px solid rgba(220,38,38,0.18)' }}
-                >
-                  <p className="text-xs mb-3 leading-relaxed" style={{ color: 'rgba(248,113,113,0.85)' }}>
-                    This will permanently delete all your encrypted accounts and reset the vault. This action cannot be undone.
+                <div className="rounded-2xl px-4 py-4" style={{ background: 'rgba(220,38,38,0.07)' }}>
+                  <p className="text-xs mb-3 leading-relaxed" style={{ color: 'rgba(248,113,113,0.75)' }}>
+                    This will permanently delete all encrypted accounts. This cannot be undone.
                   </p>
                   <div className="flex gap-2">
                     <button
                       onClick={() => setShowReset(false)}
-                      className="flex-1 py-2 rounded-lg text-xs font-semibold transition-all hover:opacity-80"
-                      style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)', color: 'rgba(241,245,249,0.45)' }}
+                      className="flex-1 py-2 rounded-xl text-xs font-semibold transition-opacity hover:opacity-70"
+                      style={{ background: 'rgba(255,255,255,0.05)', color: 'rgba(241,245,249,0.4)' }}
                     >
                       Cancel
                     </button>
                     <button
                       onClick={handleReset}
                       disabled={loading}
-                      className="flex-1 py-2 rounded-lg text-xs font-bold transition-all hover:opacity-90 disabled:opacity-50"
-                      style={{ background: 'rgba(220,38,38,0.15)', border: '1px solid rgba(220,38,38,0.25)', color: '#f87171' }}
+                      className="flex-1 py-2 rounded-xl text-xs font-bold transition-opacity hover:opacity-80 disabled:opacity-40"
+                      style={{ background: 'rgba(220,38,38,0.14)', color: '#f87171' }}
                     >
                       Reset Vault
                     </button>

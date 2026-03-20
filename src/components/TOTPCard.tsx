@@ -20,7 +20,7 @@ interface Props {
 
 const SWIPE_THRESHOLD = 72
 
-function TrashIcon({ size = 14 }: { size?: number }) {
+function TrashIcon({ size = 13 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <polyline points="3 6 5 6 21 6" />
@@ -148,7 +148,7 @@ export function TOTPCard({
 
   return (
     <div
-      className="group relative overflow-hidden rounded-2xl card-lift"
+      className="rounded-2xl overflow-hidden"
       draggable={dragEnabled}
       onDragStart={dragEnabled ? (e) => { e.dataTransfer.effectAllowed = 'move'; onDragStart() } : undefined}
       onDragOver={dragEnabled ? (e) => { e.preventDefault(); onDragOver() } : undefined}
@@ -156,7 +156,7 @@ export function TOTPCard({
       onDragEnd={dragEnabled ? onDragEnd : undefined}
       style={{ opacity: isDragging ? 0.4 : 1, transition: 'opacity 0.15s' }}
     >
-      {/* ── Mobile swipe-to-delete panel ── */}
+      {/* Mobile swipe-to-delete panel */}
       <div
         className="sm:hidden absolute inset-y-0 right-0 flex flex-col items-center justify-center gap-1"
         style={{
@@ -174,7 +174,7 @@ export function TOTPCard({
         </button>
       </div>
 
-      {/* ── Drag grip — desktop hover ── */}
+      {/* Drag grip — absolute left, desktop hover only */}
       {dragEnabled && (
         <div
           className="hidden sm:flex absolute left-2 top-1/2 -translate-y-1/2 z-10 items-center justify-center w-5 opacity-0 group-hover:opacity-25 transition-opacity cursor-grab active:cursor-grabbing pointer-events-none"
@@ -184,158 +184,227 @@ export function TOTPCard({
         </div>
       )}
 
-      {/* ── Glass card ── */}
+      {/* Glass slab — slides for swipe */}
       <div
-        className="glass-card relative cursor-pointer select-none overflow-hidden"
+        className="glass-slab group relative cursor-pointer select-none"
         style={{
           borderRadius: 16,
-          padding: '22px 24px 20px',
+          padding: '20px 24px',
           transform: `translateX(${swipeX}px)`,
           transition: swiping ? 'none' : 'transform 0.25s ease',
-          // Glassmorphism base + per-account color wash
-          background: `linear-gradient(145deg, ${account.color}14 0%, rgba(15,23,42,0.6) 55%)`,
-          outline: isDragOver ? `2px solid rgba(0,194,255,0.5)` : '2px solid transparent',
-          outlineOffset: '-2px',
+          background: `linear-gradient(135deg, ${account.color}10 0%, rgba(15,23,42,0.55) 60%)`,
+          outline: isDragOver ? '1.5px solid rgba(0,194,255,0.4)' : 'none',
         }}
         onClick={copyCode}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
-        {/* Thin color accent — left edge */}
-        <div
-          className="absolute left-0 top-5 bottom-5 w-[2px] rounded-full"
-          style={{ background: account.color, opacity: 0.75 }}
-        />
+        {/* Horizontal flex row — the slab layout */}
+        <div className="flex items-center gap-5">
 
-        {/* ── Top row: identity + ring ── */}
-        <div className="flex items-center justify-between mb-5">
-          <div className="flex items-center gap-3 min-w-0">
-            {/* Avatar */}
+          {/* LEFT: Avatar + Labels */}
+          <div
+            className="flex items-center gap-3 min-w-0"
+            style={{ width: 168, flexShrink: 0 }}
+          >
+            {/* Avatar — ring style */}
             <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-black flex-shrink-0"
               style={{
-                background: `${account.color}1a`,
-                border: `1px solid ${account.color}40`,
+                width: 40,
+                height: 40,
+                borderRadius: '50%',
+                flexShrink: 0,
+                border: `2px solid ${account.color}`,
+                background: `${account.color}12`,
+                boxShadow: `0 0 12px ${account.color}30`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
                 color: account.color,
-                boxShadow: `0 0 16px ${account.color}25`,
+                fontSize: 14,
+                fontWeight: 700,
               }}
             >
               {account.issuer.charAt(0).toUpperCase()}
             </div>
+
             {/* Labels */}
-            <div className="min-w-0">
+            <div style={{ minWidth: 0 }}>
               <p
-                className="text-xs font-bold uppercase tracking-widest leading-tight truncate"
-                style={{ color: account.color }}
+                style={{
+                  color: account.color,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.08em',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
               >
                 {account.issuer}
               </p>
               <p
-                className="text-xs mt-0.5 truncate"
-                style={{ color: 'rgba(241,245,249,0.38)' }}
+                style={{
+                  color: 'rgba(241,245,249,0.35)',
+                  fontSize: 11,
+                  marginTop: 2,
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
               >
                 {account.name}
               </p>
             </div>
           </div>
 
-          {/* Countdown ring — larger for premium feel */}
-          <div className="flex-shrink-0 ml-3">
-            <CountdownRing progress={progress} secondsLeft={secondsLeft} color={account.color} size={60} />
-          </div>
-        </div>
-
-        {/* ── Code display ── */}
-        <div className="mb-4">
-          <p
-            style={{
-              color: codesVisible ? codeColor : 'rgba(241,245,249,0.15)',
-              fontSize: '2.75rem',
-              fontWeight: 900,
-              letterSpacing: '0.13em',
-              lineHeight: 1,
-              fontVariantNumeric: 'tabular-nums',
-              textShadow: codesVisible
-                ? isLow
-                  ? '0 0 32px rgba(248,113,113,0.55)'
-                  : `0 0 32px ${account.color}55`
-                : 'none',
-              transition: 'color 0.4s ease, text-shadow 0.4s ease',
-            }}
-          >
-            {codesVisible ? formattedCode : '••• •••'}
-          </p>
-
-          {/* Next code — visible when countdown is low */}
-          {isLow && codesVisible && (
+          {/* CENTER: Code */}
+          <div style={{ flex: 1, minWidth: 0 }}>
             <p
-              className="mt-2 text-xs font-semibold"
               style={{
-                color: 'rgba(241,245,249,0.28)',
-                letterSpacing: '0.09em',
+                color: codesVisible ? codeColor : 'rgba(241,245,249,0.12)',
+                fontSize: 'clamp(1.875rem, 5vw, 3rem)',
+                fontWeight: 700,
+                letterSpacing: '0.12em',
+                lineHeight: 1,
                 fontVariantNumeric: 'tabular-nums',
+                textShadow: codesVisible
+                  ? isLow
+                    ? '0 0 28px rgba(248,113,113,0.5)'
+                    : `0 0 28px ${account.color}45`
+                  : 'none',
+                transition: 'color 0.4s ease',
               }}
             >
-              next&nbsp;&nbsp;{nextCode.slice(0, 3)}&nbsp;{nextCode.slice(3)}
+              {codesVisible ? formattedCode : '••• •••'}
             </p>
-          )}
-        </div>
 
-        {/* ── Bottom row: actions ── */}
-        <div className="flex items-center justify-end gap-1.5">
+            {isLow && codesVisible && (
+              <p
+                style={{
+                  marginTop: 6,
+                  fontSize: 11,
+                  color: 'rgba(241,245,249,0.28)',
+                  letterSpacing: '0.08em',
+                  fontVariantNumeric: 'tabular-nums',
+                }}
+              >
+                next {nextCode.slice(0, 3)} {nextCode.slice(3)}
+              </p>
+            )}
+          </div>
 
-          {/* Edit — desktop: hover-only; mobile: always */}
-          <button
-            className="sm:opacity-0 sm:group-hover:opacity-100 flex items-center justify-center w-7 h-7 rounded-lg transition-all active:scale-90"
+          {/* RIGHT: Ring + Actions */}
+          <div
             style={{
-              background: 'rgba(99,102,241,0.1)',
-              border: '1px solid rgba(99,102,241,0.22)',
-              color: '#818cf8',
+              flexShrink: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'flex-end',
+              gap: 10,
             }}
-            onClick={e => { e.stopPropagation(); onEdit(account.id) }}
-            title="Edit account"
           >
-            <PencilIcon />
-          </button>
+            {/* Ring as jewel */}
+            <CountdownRing
+              progress={progress}
+              secondsLeft={secondsLeft}
+              color={account.color}
+              size={52}
+            />
 
-          {/* Delete */}
-          <button
-            className="flex items-center justify-center w-7 h-7 rounded-lg transition-all active:scale-90"
-            style={{
-              background: 'rgba(220,38,38,0.08)',
-              border: '1px solid rgba(220,38,38,0.18)',
-              color: '#f87171',
-              opacity: 0.35,
-            }}
-            onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
-            onMouseLeave={e => (e.currentTarget.style.opacity = '0.35')}
-            onClick={e => { e.stopPropagation(); onDelete(account.id) }}
-            title="Delete account"
-          >
-            <TrashIcon />
-          </button>
+            {/* Action row */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
 
-          {/* Divider */}
-          <div className="w-px h-4 mx-0.5 flex-shrink-0" style={{ background: 'rgba(255,255,255,0.1)' }} />
+              {/* Edit — desktop hover-only */}
+              <button
+                className="sm:opacity-0 sm:group-hover:opacity-100 transition-all active:scale-90"
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: 8,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: 'rgba(99,102,241,0.1)',
+                  color: '#818cf8',
+                  border: 'none',
+                  cursor: 'pointer',
+                }}
+                onClick={e => { e.stopPropagation(); onEdit(account.id) }}
+                title="Edit account"
+              >
+                <PencilIcon />
+              </button>
 
-          {/* Copy */}
-          <button
-            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all active:scale-95"
-            style={copied ? {
-              background: 'rgba(16,185,129,0.12)',
-              color: '#34d399',
-              border: '1px solid rgba(16,185,129,0.25)',
-            } : {
-              background: 'rgba(255,255,255,0.06)',
-              color: 'rgba(241,245,249,0.45)',
-              border: '1px solid rgba(255,255,255,0.09)',
-            }}
-            onClick={e => { e.stopPropagation(); copyCode() }}
-          >
-            {copied ? <CheckIcon /> : <CopyIcon />}
-            {copied ? 'Copied' : 'Copy'}
-          </button>
+              {/* Delete */}
+              <button
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: 8,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: 'rgba(220,38,38,0.08)',
+                  color: '#f87171',
+                  opacity: 0.3,
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'opacity 0.15s',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
+                onMouseLeave={e => (e.currentTarget.style.opacity = '0.3')}
+                onClick={e => { e.stopPropagation(); onDelete(account.id) }}
+                title="Delete account"
+              >
+                <TrashIcon />
+              </button>
+
+              {/* Divider */}
+              <div
+                style={{
+                  width: 1,
+                  height: 16,
+                  background: 'rgba(255,255,255,0.08)',
+                }}
+              />
+
+              {/* Copy button */}
+              <button
+                style={copied ? {
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 5,
+                  padding: '5px 10px',
+                  borderRadius: 8,
+                  fontSize: 11,
+                  fontWeight: 600,
+                  background: 'rgba(16,185,129,0.12)',
+                  color: '#34d399',
+                  border: 'none',
+                  cursor: 'pointer',
+                } : {
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 5,
+                  padding: '5px 10px',
+                  borderRadius: 8,
+                  fontSize: 11,
+                  fontWeight: 600,
+                  background: 'rgba(255,255,255,0.05)',
+                  color: 'rgba(241,245,249,0.4)',
+                  border: 'none',
+                  cursor: 'pointer',
+                }}
+                onClick={e => { e.stopPropagation(); copyCode() }}
+              >
+                {copied ? <CheckIcon /> : <CopyIcon />}
+                {copied ? 'Copied' : 'Copy'}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
