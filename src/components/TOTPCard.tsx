@@ -19,7 +19,7 @@ interface Props {
 
 const SWIPE_THRESHOLD = 72
 
-function TrashIcon({ size = 20 }: { size?: number }) {
+function TrashIcon({ size = 14 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <polyline points="3 6 5 6 21 6" />
@@ -30,9 +30,20 @@ function TrashIcon({ size = 20 }: { size?: number }) {
   )
 }
 
-function PencilIcon({ size = 14 }: { size?: number }) {
+function TrashIconLarge() {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="3 6 5 6 21 6" />
+      <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
+      <path d="M10 11v6M14 11v6" />
+      <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2" />
+    </svg>
+  )
+}
+
+function PencilIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
       <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
     </svg>
@@ -58,13 +69,10 @@ function CheckIcon() {
 
 function GripIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="9" cy="6" r="1" fill="currentColor" stroke="none" />
-      <circle cx="15" cy="6" r="1" fill="currentColor" stroke="none" />
-      <circle cx="9" cy="12" r="1" fill="currentColor" stroke="none" />
-      <circle cx="15" cy="12" r="1" fill="currentColor" stroke="none" />
-      <circle cx="9" cy="18" r="1" fill="currentColor" stroke="none" />
-      <circle cx="15" cy="18" r="1" fill="currentColor" stroke="none" />
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+      <circle cx="9" cy="6" r="1.5" /><circle cx="15" cy="6" r="1.5" />
+      <circle cx="9" cy="12" r="1.5" /><circle cx="15" cy="12" r="1.5" />
+      <circle cx="9" cy="18" r="1.5" /><circle cx="15" cy="18" r="1.5" />
     </svg>
   )
 }
@@ -110,12 +118,10 @@ export function TOTPCard({
   const onTouchMove = (e: React.TouchEvent) => {
     const dx = e.touches[0].clientX - touchStartX.current
     const dy = e.touches[0].clientY - touchStartY.current
-
     if (isScrolling.current === null) {
       isScrolling.current = Math.abs(dy) > Math.abs(dx)
     }
     if (isScrolling.current) return
-
     if (revealed && dx > 0) {
       setSwipeX(Math.min(0, -SWIPE_THRESHOLD + dx))
     } else if (!revealed && dx < 0) {
@@ -147,7 +153,7 @@ export function TOTPCard({
       onDragEnd={dragEnabled ? onDragEnd : undefined}
       style={{ opacity: isDragging ? 0.45 : 1, transition: 'opacity 0.15s' }}
     >
-      {/* Swipe delete — mobile */}
+      {/* ── Mobile swipe-to-delete panel (hidden on desktop) ── */}
       <div
         className="sm:hidden absolute inset-y-0 right-0 flex flex-col items-center justify-center gap-1"
         style={{
@@ -160,52 +166,22 @@ export function TOTPCard({
           className="flex flex-col items-center gap-1 transition-all active:scale-90"
           onClick={() => onDelete(account.id)}
         >
-          <TrashIcon />
+          <TrashIconLarge />
           <span className="text-xs font-medium">Delete</span>
         </button>
       </div>
 
-      {/* Action buttons — desktop */}
-      <div className="hidden sm:flex absolute top-4 right-4 z-10 items-center gap-1.5 transition-all">
-        {/* Drag handle */}
-        {dragEnabled && (
-          <div
-            className="flex items-center justify-center w-7 h-7 rounded-lg opacity-0 group-hover:opacity-40 transition-all cursor-grab active:cursor-grabbing"
-            style={{ color: 'rgba(241,245,249,0.6)' }}
-            title="Drag to reorder"
-          >
-            <GripIcon />
-          </div>
-        )}
-        {/* Edit */}
-        <button
-          className="flex items-center justify-center w-7 h-7 rounded-lg opacity-0 group-hover:opacity-100 transition-all active:scale-90"
-          style={{
-            background: 'rgba(99,102,241,0.12)',
-            border: '1px solid rgba(99,102,241,0.25)',
-            color: '#818cf8',
-          }}
-          onClick={e => { e.stopPropagation(); onEdit(account.id) }}
-          title="Edit account"
+      {/* ── Drag grip — left edge, desktop only ── */}
+      {dragEnabled && (
+        <div
+          className="hidden sm:flex absolute left-2 top-1/2 -translate-y-1/2 z-10 items-center justify-center w-5 opacity-0 group-hover:opacity-30 transition-all cursor-grab active:cursor-grabbing pointer-events-none"
+          style={{ color: 'rgba(241,245,249,0.7)' }}
         >
-          <PencilIcon />
-        </button>
-        {/* Delete — always faintly visible */}
-        <button
-          className="flex items-center justify-center w-7 h-7 rounded-lg opacity-30 group-hover:opacity-100 transition-all active:scale-90"
-          style={{
-            background: 'rgba(220,38,38,0.12)',
-            border: '1px solid rgba(220,38,38,0.25)',
-            color: '#f87171',
-          }}
-          onClick={e => { e.stopPropagation(); onDelete(account.id) }}
-          title="Delete account"
-        >
-          <TrashIcon size={14} />
-        </button>
-      </div>
+          <GripIcon />
+        </div>
+      )}
 
-      {/* Glass card */}
+      {/* ── Glass card ── */}
       <div
         className="glass-card relative p-5 cursor-pointer select-none"
         style={{
@@ -221,7 +197,8 @@ export function TOTPCard({
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
-        {/* Top row: avatar + names + countdown ring */}
+        {/* ── Top row: avatar + issuer/name + countdown ring ── */}
+        {/* Nothing else goes here — countdown ring has the whole right side */}
         <div className="flex items-start justify-between mb-5">
           <div className="flex items-center gap-3">
             <div
@@ -235,10 +212,7 @@ export function TOTPCard({
               {account.issuer.charAt(0).toUpperCase()}
             </div>
             <div>
-              <p
-                className="text-xs font-bold uppercase tracking-widest leading-tight"
-                style={{ color: account.color }}
-              >
+              <p className="text-xs font-bold uppercase tracking-widest leading-tight" style={{ color: account.color }}>
                 {account.issuer}
               </p>
               <p className="text-xs mt-0.5" style={{ color: 'rgba(241,245,249,0.42)' }}>
@@ -249,10 +223,12 @@ export function TOTPCard({
           <CountdownRing progress={progress} secondsLeft={secondsLeft} color={account.color} />
         </div>
 
-        {/* Code + copy */}
-        <div className="flex items-end justify-between">
+        {/* ── Bottom row: code  +  [edit][delete] | [copy] ── */}
+        <div className="flex items-end justify-between gap-3">
+
+          {/* Code digits */}
           <p
-            className="tabular-nums font-black"
+            className="tabular-nums font-black flex-shrink-0"
             style={{
               color: codesVisible ? codeColor : 'rgba(241,245,249,0.2)',
               fontSize: '2.25rem',
@@ -263,27 +239,66 @@ export function TOTPCard({
                 : codesVisible
                   ? `0 0 24px ${account.color}50`
                   : 'none',
-              fontFamily: codesVisible ? undefined : 'monospace',
             }}
           >
             {codesVisible ? formattedCode : '••• •••'}
           </p>
 
-          <div
-            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all"
-            style={copied ? {
-              background: 'rgba(16,185,129,0.12)',
-              color: '#34d399',
-              border: '1px solid rgba(16,185,129,0.25)',
-            } : {
-              background: 'rgba(255,255,255,0.06)',
-              color: 'rgba(241,245,249,0.45)',
-              border: '1px solid rgba(255,255,255,0.09)',
-            }}
-          >
-            {copied ? <CheckIcon /> : <CopyIcon />}
-            {copied ? 'Copied' : 'Copy'}
+          {/* Action cluster — right side of bottom row */}
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+
+            {/* Edit — desktop: appears on hover | mobile: always shown */}
+            <button
+              className="sm:opacity-0 sm:group-hover:opacity-100 flex items-center justify-center w-7 h-7 rounded-lg transition-all active:scale-90"
+              style={{
+                background: 'rgba(99,102,241,0.1)',
+                border: '1px solid rgba(99,102,241,0.2)',
+                color: '#818cf8',
+              }}
+              onClick={e => { e.stopPropagation(); onEdit(account.id) }}
+              title="Edit account"
+            >
+              <PencilIcon />
+            </button>
+
+            {/* Delete — always faintly visible, full red on hover */}
+            <button
+              className="flex items-center justify-center w-7 h-7 rounded-lg transition-all active:scale-90"
+              style={{
+                background: 'rgba(220,38,38,0.08)',
+                border: '1px solid rgba(220,38,38,0.18)',
+                color: '#f87171',
+                opacity: 0.35,
+              }}
+              onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
+              onMouseLeave={e => (e.currentTarget.style.opacity = '0.35')}
+              onClick={e => { e.stopPropagation(); onDelete(account.id) }}
+              title="Delete account"
+            >
+              <TrashIcon />
+            </button>
+
+            {/* Divider */}
+            <div className="w-px h-4 mx-0.5 flex-shrink-0" style={{ background: 'rgba(255,255,255,0.1)' }} />
+
+            {/* Copy */}
+            <div
+              className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all"
+              style={copied ? {
+                background: 'rgba(16,185,129,0.12)',
+                color: '#34d399',
+                border: '1px solid rgba(16,185,129,0.25)',
+              } : {
+                background: 'rgba(255,255,255,0.06)',
+                color: 'rgba(241,245,249,0.45)',
+                border: '1px solid rgba(255,255,255,0.09)',
+              }}
+            >
+              {copied ? <CheckIcon /> : <CopyIcon />}
+              {copied ? 'Copied' : 'Copy'}
+            </div>
           </div>
+
         </div>
       </div>
     </div>
