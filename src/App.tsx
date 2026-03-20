@@ -1,11 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAccounts } from './hooks/useAccounts'
 import { usePin } from './hooks/usePin'
 import { TOTPCard } from './components/TOTPCard'
 import { AddAccount } from './components/AddAccount'
 import { DevModule } from './components/DevModule'
 import { PinLock } from './components/PinLock'
-import { Mascot } from './components/Mascot'
 
 type Tab = 'vault' | 'dev'
 
@@ -91,6 +90,15 @@ export default function App() {
   const [pinError, setPinError]     = useState('')
   const [search, setSearch]         = useState('')
 
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.shiftKey && e.key === 'D') setTab('dev')
+      if (e.shiftKey && e.key === 'V') setTab('vault')
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [])
+
   const filtered = accounts.filter(a =>
     a.name.toLowerCase().includes(search.toLowerCase()) ||
     a.issuer.toLowerCase().includes(search.toLowerCase())
@@ -133,7 +141,7 @@ export default function App() {
         <aside
           className="hidden sm:flex flex-col flex-shrink-0"
           style={{
-            width: 280,
+            width: 300,
             background: 'rgba(243,240,255,0.88)',
             backdropFilter: 'blur(48px) saturate(180%)',
             WebkitBackdropFilter: 'blur(48px) saturate(180%)',
@@ -164,11 +172,11 @@ export default function App() {
 
           {/* Nav */}
           <nav className="px-4 flex flex-col gap-1">
-            {TABS.map(({ key, label, icon }) => (
+            {TABS.filter(t => t.key !== 'dev').map(({ key, label, icon }) => (
               <button
                 key={key}
                 onClick={() => setTab(key)}
-                className="flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold text-left transition-all w-full"
+                className="flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-semibold text-left transition-all w-full"
                 style={tab === key ? {
                   background: 'linear-gradient(135deg, rgba(99,102,241,0.13), rgba(139,92,246,0.09))',
                   color: '#4338ca',
@@ -199,16 +207,16 @@ export default function App() {
           <div className="flex-1" />
 
           {/* Stats card */}
-          <div className="p-5">
+          <div className="px-5 pb-7">
             <div
-              className="rounded-2xl p-4"
+              className="rounded-2xl px-5 py-4 flex items-center gap-4"
               style={{
                 background: 'linear-gradient(135deg, rgba(99,102,241,0.08), rgba(139,92,246,0.05))',
                 border: '1px solid rgba(99,102,241,0.13)',
               }}
             >
               <p
-                className="text-3xl font-black mb-0.5"
+                className="text-4xl font-black leading-none flex-shrink-0"
                 style={{
                   background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
                   WebkitBackgroundClip: 'text',
@@ -218,21 +226,13 @@ export default function App() {
               >
                 {accounts.length}
               </p>
-              <p className="text-xs font-semibold mb-4" style={{ color: 'rgba(30,27,75,0.45)' }}>
-                account{accounts.length !== 1 ? 's' : ''} secured
-              </p>
-              {[
-                { icon: <ShieldIcon size={11} />, label: 'No server needed' },
-                { icon: <WifiOffIcon size={11} />,  label: 'Works offline' },
-                { icon: <LockIcon />,               label: 'Client-side only' },
-              ].map(({ icon, label }) => (
-                <div key={label} className="flex items-center gap-2 mb-2 last:mb-0">
-                  <span style={{ color: '#6366f1', flexShrink: 0 }}>{icon}</span>
-                  <span className="text-xs font-medium" style={{ color: 'rgba(30,27,75,0.55)' }}>{label}</span>
-                </div>
-              ))}
+              <div>
+                <p className="text-sm font-semibold leading-tight" style={{ color: '#1a1740' }}>
+                  account{accounts.length !== 1 ? 's' : ''} secured
+                </p>
+                <p className="text-xs mt-0.5" style={{ color: 'rgba(30,27,75,0.38)' }}>RFC 6238 · TOTP</p>
+              </div>
             </div>
-            <p className="text-center text-xs mt-3" style={{ color: 'rgba(30,27,75,0.22)' }}>RFC 6238 · TOTP</p>
           </div>
         </aside>
 
@@ -313,12 +313,12 @@ export default function App() {
           <header
             className="hidden sm:flex items-center justify-between flex-shrink-0"
             style={{
-              padding: '28px 40px',
+              padding: '32px 52px',
               borderBottom: '1px solid rgba(139,92,246,0.09)',
             }}
           >
             <div>
-              <h2 className="font-bold text-2xl" style={{ color: '#1a1740' }}>
+              <h2 className="font-bold text-3xl" style={{ color: '#1a1740' }}>
                 {tab === 'vault' ? 'My Codes' : 'Developer Tools'}
               </h2>
               <p className="text-sm mt-1 font-medium" style={{ color: 'rgba(30,27,75,0.38)' }}>
@@ -382,7 +382,7 @@ export default function App() {
           </header>
 
           {/* ── Scrollable content ── */}
-          <div className="flex-1 overflow-y-auto" style={{ padding: '32px 40px' }}>
+          <div className="flex-1 overflow-y-auto" style={{ padding: '40px 52px' }}>
 
             {/* Mobile search */}
             {tab === 'vault' && accounts.length > 2 && (
@@ -471,7 +471,7 @@ export default function App() {
 
                 ) : (
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     {filtered.map(account => (
                       <TOTPCard key={account.id} account={account} onDelete={removeAccount} />
                     ))}
@@ -485,9 +485,6 @@ export default function App() {
           </div>
         </div>
       </div>
-
-      {/* ── Corner mascot — always visible, subtle ── */}
-      <Mascot />
 
       {showAdd && <AddAccount onAdd={addAccount} onClose={() => setShowAdd(false)} />}
     </>
