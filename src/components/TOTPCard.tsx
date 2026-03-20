@@ -6,6 +6,7 @@ import { CountdownRing } from './CountdownRing'
 interface Props {
   account: Account
   codesVisible: boolean
+  clockOffset: number
   onDelete: (id: string) => void
   onEdit: (id: string) => void
   isDragging: boolean
@@ -78,13 +79,13 @@ function GripIcon() {
 }
 
 export function TOTPCard({
-  account, codesVisible,
+  account, codesVisible, clockOffset,
   onDelete, onEdit,
   isDragging, isDragOver,
   onDragStart, onDragOver, onDrop, onDragEnd,
   dragEnabled,
 }: Props) {
-  const { code, nextCode, secondsLeft, progress } = useTotp(account.secret)
+  const { code, nextCode, secondsLeft, progress } = useTotp(account.secret, clockOffset)
   const [copied, setCopied] = useState(false)
   const [swipeX, setSwipeX] = useState(0)
   const [swiping, setSwiping] = useState(false)

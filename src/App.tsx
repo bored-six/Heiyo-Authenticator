@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useVault } from './hooks/useVault'
+import { useClockSync } from './hooks/useClockSync'
 import { TOTPCard } from './components/TOTPCard'
 import { AddAccount } from './components/AddAccount'
 import { EditAccount } from './components/EditAccount'
@@ -60,6 +61,15 @@ function XIcon() {
     </svg>
   )
 }
+function ClockWarnIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <polyline points="12 6 12 12 16 14" />
+      <line x1="12" y1="19" x2="12.01" y2="19" strokeWidth="3" />
+    </svg>
+  )
+}
 function WifiOffIcon({ size = 11 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -114,6 +124,7 @@ export default function App() {
     createVault, unlock, lock, resetVault,
     addAccount, removeAccount, updateAccount, reorderAccounts,
   } = useVault()
+  const clockSync = useClockSync()
   const [tab, setTab]           = useState<Tab>('vault')
   const [showAdd, setShowAdd]   = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -386,6 +397,15 @@ export default function App() {
                 background: 'linear-gradient(135deg, #00c2ff, #a78bfa)',
                 WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
               }}>Heiyo Authenticator</h1>
+              {clockSync.drifted && (
+                <div
+                  className="flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold"
+                  style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.22)', color: '#f59e0b' }}
+                  title={`System clock is off by ~${Math.round(Math.abs(clockSync.offset) / 1000)}s`}
+                >
+                  <ClockWarnIcon />
+                </div>
+              )}
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -462,9 +482,21 @@ export default function App() {
             style={{ padding: '32px 52px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}
           >
             <div>
-              <h2 className="font-bold text-3xl" style={{ color: '#f1f5f9' }}>
-                {tab === 'vault' ? 'My Codes' : 'Developer Tools'}
-              </h2>
+              <div className="flex items-center gap-3 flex-wrap">
+                <h2 className="font-bold text-3xl" style={{ color: '#f1f5f9' }}>
+                  {tab === 'vault' ? 'My Codes' : 'Developer Tools'}
+                </h2>
+                {tab === 'vault' && clockSync.drifted && (
+                  <div
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold"
+                    style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.22)', color: '#f59e0b' }}
+                    title={`System clock is off by ~${Math.round(Math.abs(clockSync.offset) / 1000)}s — codes may be incorrect`}
+                  >
+                    <ClockWarnIcon />
+                    Clock out of sync
+                  </div>
+                )}
+              </div>
               <p className="text-sm mt-1.5 font-medium" style={{ color: 'rgba(241,245,249,0.38)' }}>
                 {tab === 'vault'
                   ? `${accounts.length} account${accounts.length !== 1 ? 's' : ''} · 30-second rotating codes`
@@ -642,6 +674,7 @@ export default function App() {
                         key={account.id}
                         account={account}
                         codesVisible={codesVisible}
+                        clockOffset={clockSync.offset}
                         onDelete={removeAccount}
                         onEdit={setEditingId}
                         isDragging={dragIndex === index}
