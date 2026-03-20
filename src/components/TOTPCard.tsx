@@ -148,7 +148,7 @@ export function TOTPCard({
 
   return (
     <div
-      className="group relative overflow-hidden rounded-2xl"
+      className="group relative overflow-hidden rounded-2xl card-lift"
       draggable={dragEnabled}
       onDragStart={dragEnabled ? (e) => { e.dataTransfer.effectAllowed = 'move'; onDragStart() } : undefined}
       onDragOver={dragEnabled ? (e) => { e.preventDefault(); onDragOver() } : undefined}

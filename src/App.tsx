@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { motion } from 'framer-motion'
 import { useVault } from './hooks/useVault'
 import { useClockSync } from './hooks/useClockSync'
 import { TOTPCard } from './components/TOTPCard'
@@ -7,6 +8,15 @@ import { EditAccount } from './components/EditAccount'
 import { DevModule } from './components/DevModule'
 import { LockScreen } from './components/LockScreen'
 import type { Account } from './types'
+
+const gridVariants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.07 } },
+}
+const cardVariants = {
+  hidden: { opacity: 0, y: 18 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.38, ease: 'easeOut' as const } },
+}
 
 type Tab = 'vault' | 'dev'
 
@@ -215,14 +225,14 @@ export default function App() {
   if (status === 'loading') {
     return (
       <>
-        <div className="fixed inset-0" style={{ background: '#060b18', zIndex: 0 }}>
+        <div className="fixed inset-0" style={{ background: '#020617', zIndex: 0 }}>
           <div className="bg-glow" />
         </div>
         <div className="fixed inset-0 z-10 flex items-center justify-center">
           <div className="flex flex-col items-center gap-4">
             <div
               className="w-14 h-14 rounded-2xl flex items-center justify-center"
-              style={{ background: 'linear-gradient(135deg, #00c2ff, #0090ff)', color: '#060b18' }}
+              style={{ background: 'linear-gradient(135deg, #00c2ff, #0090ff)', color: '#020617' }}
             >
               <ShieldIcon size={24} />
             </div>
@@ -314,7 +324,7 @@ export default function App() {
   return (
     <>
       {/* ── Deep background with glow ── */}
-      <div className="fixed inset-0 pointer-events-none" style={{ background: '#060b18', zIndex: 0 }}>
+      <div className="fixed inset-0 pointer-events-none" style={{ background: '#020617', zIndex: 0 }}>
         <div className="bg-glow" />
       </div>
 
@@ -342,7 +352,7 @@ export default function App() {
                 style={{
                   background: 'linear-gradient(135deg, #00c2ff 0%, #0090ff 100%)',
                   boxShadow: '0 0 24px rgba(0, 194, 255, 0.45)',
-                  color: '#060b18',
+                  color: '#020617',
                 }}
               >
                 <ShieldIcon size={18} />
@@ -456,7 +466,7 @@ export default function App() {
             <div className="flex items-center gap-2.5">
               <div
                 className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: 'linear-gradient(135deg, #00c2ff, #0090ff)', boxShadow: '0 0 14px rgba(0,194,255,0.4)', color: '#060b18' }}
+                style={{ background: 'linear-gradient(135deg, #00c2ff, #0090ff)', boxShadow: '0 0 14px rgba(0,194,255,0.4)', color: '#020617' }}
               >
                 <ShieldIcon size={14} />
               </div>
@@ -510,7 +520,7 @@ export default function App() {
               )}
               {tab === 'vault' && (
                 <button onClick={() => setShowAdd(true)} className="w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-95"
-                  style={{ background: 'linear-gradient(135deg, #00c2ff, #0090ff)', boxShadow: '0 4px 12px rgba(0,194,255,0.35)', color: '#060b18' }}>
+                  style={{ background: 'linear-gradient(135deg, #00c2ff, #0090ff)', boxShadow: '0 4px 12px rgba(0,194,255,0.35)', color: '#020617' }}>
                   <PlusIcon size={16} />
                 </button>
               )}
@@ -622,7 +632,7 @@ export default function App() {
                   style={{
                     background: 'linear-gradient(135deg, #00c2ff 0%, #0090ff 100%)',
                     boxShadow: '0 4px 16px rgba(0, 194, 255, 0.35)',
-                    color: '#060b18',
+                    color: '#020617',
                   }}
                 >
                   <PlusIcon size={16} /> Add Account
@@ -680,7 +690,7 @@ export default function App() {
                       style={{
                         background: 'linear-gradient(135deg, #00c2ff 0%, #0090ff 100%)',
                         boxShadow: '0 12px 40px rgba(0, 194, 255, 0.3), 0 4px 12px rgba(0, 144, 255, 0.2)',
-                        color: '#060b18',
+                        color: '#020617',
                       }}
                     >
                       <PlusIcon size={18} />
@@ -718,25 +728,31 @@ export default function App() {
 
                 ) : (
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <motion.div
+                    className="grid grid-cols-1 sm:grid-cols-2 gap-5"
+                    variants={gridVariants}
+                    initial="hidden"
+                    animate="show"
+                  >
                     {filtered.map((account, index) => (
-                      <TOTPCard
-                        key={account.id}
-                        account={account}
-                        codesVisible={codesVisible}
-                        clockOffset={clockSync.offset}
-                        onDelete={removeAccount}
-                        onEdit={setEditingId}
-                        isDragging={dragIndex === index}
-                        isDragOver={dragOverIndex === index && dragIndex !== index}
-                        onDragStart={() => handleDragStart(index)}
-                        onDragOver={() => handleDragOver(index)}
-                        onDrop={() => handleDrop(index)}
-                        onDragEnd={handleDragEnd}
-                        dragEnabled={dragEnabled}
-                      />
+                      <motion.div key={account.id} variants={cardVariants}>
+                        <TOTPCard
+                          account={account}
+                          codesVisible={codesVisible}
+                          clockOffset={clockSync.offset}
+                          onDelete={removeAccount}
+                          onEdit={setEditingId}
+                          isDragging={dragIndex === index}
+                          isDragOver={dragOverIndex === index && dragIndex !== index}
+                          onDragStart={() => handleDragStart(index)}
+                          onDragOver={() => handleDragOver(index)}
+                          onDrop={() => handleDrop(index)}
+                          onDragEnd={handleDragEnd}
+                          dragEnabled={dragEnabled}
+                        />
+                      </motion.div>
                     ))}
-                  </div>
+                  </motion.div>
 
                 )}
               </>
