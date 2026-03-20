@@ -7,6 +7,7 @@ import { AddAccount } from './components/AddAccount'
 import { EditAccount } from './components/EditAccount'
 import { DevModule } from './components/DevModule'
 import { LockScreen } from './components/LockScreen'
+import { exportVault, importVault, isValidBackup } from './lib/backup'
 import type { Account } from './types'
 
 // ── Framer Motion variants ──────────────────────────────────────────────────
@@ -263,32 +264,48 @@ export default function App() {
   }
   const handleDragEnd = () => { setDragIndex(null); setDragOverIndex(null) }
 
-  const handleExport = () => {
-    const blob = new Blob([JSON.stringify({ version: 1, accounts }, null, 2)], { type: 'application/json' })
-    const url  = URL.createObjectURL(blob)
-    const a    = document.createElement('a')
-    a.href = url
-    a.download = `heiyo-backup-${new Date().toISOString().split('T')[0]}.json`
-    a.click()
-    URL.revokeObjectURL(url)
+  const handleExport = async () => {
+    try {
+      await exportVault()
+    } catch (err) {
+      alert('Export failed: ' + (err instanceof Error ? err.message : 'Unknown error'))
+    }
   }
 
   const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
     const reader = new FileReader()
-    reader.onload = (ev) => {
+    reader.onload = async (ev) => {
       try {
-        const parsed = JSON.parse(ev.target?.result as string)
-        const imported: Account[] = Array.isArray(parsed) ? parsed : (parsed.accounts ?? [])
-        if (!Array.isArray(imported) || imported.length === 0) throw new Error()
+        const parsed: unknown = JSON.parse(ev.target?.result as string)
+
+        // ── New encrypted backup (v2) ──────────────────────────────────────
+        if (isValidBackup(parsed)) {
+          const ok = window.confirm(
+            'Import encrypted vault backup?\n\n' +
+            'Your current vault will be replaced. You will need your original ' +
+            'master password to unlock the imported vault.'
+          )
+          if (!ok) return
+          await importVault(parsed)
+          lock() // Force re-authentication with the newly imported vault
+          return
+        }
+
+        // ── Legacy plaintext backup (v1) ───────────────────────────────────
+        const data = parsed as { version?: number; accounts?: Account[] } | Account[]
+        const imported: Account[] = Array.isArray(data)
+          ? data
+          : (data.accounts ?? [])
+        if (!Array.isArray(imported) || imported.length === 0) throw new Error('No accounts found in file.')
         const msg = accounts.length > 0
-          ? `Replace your ${accounts.length} existing account(s) with ${imported.length} from this backup?`
-          : `Import ${imported.length} account(s)?`
+          ? `Replace your ${accounts.length} existing account(s) with ${imported.length} from this legacy backup?`
+          : `Import ${imported.length} account(s) from legacy backup?`
         if (!window.confirm(msg)) return
         reorderAccounts(imported)
-      } catch {
-        alert('Invalid backup file. Please use a file exported from Heiyo.')
+      } catch (err) {
+        alert(err instanceof Error ? err.message : 'Invalid backup file. Please use a file exported from Heiyo.')
       }
     }
     reader.readAsText(file)
