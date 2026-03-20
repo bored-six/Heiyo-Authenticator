@@ -23,7 +23,7 @@ function TrashIcon({ size = 20 }: { size?: number }) {
 
 function CopyIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
       <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
     </svg>
@@ -32,7 +32,7 @@ function CopyIcon() {
 
 function CheckIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
       <polyline points="20 6 9 17 4 12" />
     </svg>
   )
@@ -102,7 +102,7 @@ export function TOTPCard({ account, onDelete }: Props) {
 
   return (
     <div className="group relative overflow-hidden rounded-2xl">
-      {/* Swipe delete zone — touch / mobile only */}
+      {/* Swipe delete — mobile */}
       <div
         className="sm:hidden absolute inset-y-0 right-0 flex flex-col items-center justify-center gap-1"
         style={{
@@ -120,13 +120,13 @@ export function TOTPCard({ account, onDelete }: Props) {
         </button>
       </div>
 
-      {/* Hover delete button — desktop only */}
+      {/* Hover delete — desktop */}
       <button
-        className="hidden sm:flex absolute top-2.5 right-2.5 z-10 items-center justify-center w-7 h-7 rounded-lg opacity-0 group-hover:opacity-100 transition-all active:scale-90"
+        className="hidden sm:flex absolute top-4 right-4 z-10 items-center justify-center w-7 h-7 rounded-lg opacity-0 group-hover:opacity-100 transition-all active:scale-90"
         style={{
-          background: 'rgba(220,38,38,0.1)',
-          border: '1px solid rgba(220,38,38,0.2)',
-          color: '#dc2626',
+          background: 'rgba(220,38,38,0.12)',
+          border: '1px solid rgba(220,38,38,0.25)',
+          color: '#f87171',
         }}
         onClick={e => { e.stopPropagation(); onDelete(account.id) }}
         title="Delete account"
@@ -136,60 +136,73 @@ export function TOTPCard({ account, onDelete }: Props) {
 
       {/* Glass card */}
       <div
-        className="glass-card relative flex items-center gap-4 p-4 cursor-pointer select-none"
+        className="glass-card relative p-5 cursor-pointer select-none"
         style={{
           borderRadius: 16,
           transform: `translateX(${swipeX}px)`,
           transition: swiping ? 'none' : 'transform 0.25s ease',
+          background: `linear-gradient(160deg, ${account.color}0d 0%, rgba(13,20,38,0.75) 45%)`,
         }}
         onClick={copyCode}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
-        {/* Avatar */}
-        <div
-          className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-base flex-shrink-0"
-          style={{
-            background: `radial-gradient(circle at 35% 35%, ${account.color}cc, ${account.color}55)`,
-            boxShadow: `0 4px 18px ${account.color}55`,
-            border: `1px solid ${account.color}40`,
-          }}
-        >
-          {account.issuer.charAt(0).toUpperCase()}
+        {/* Top row: avatar + names + countdown ring */}
+        <div className="flex items-start justify-between mb-5">
+          <div className="flex items-center gap-3">
+            <div
+              className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0"
+              style={{
+                background: `${account.color}18`,
+                border: `1px solid ${account.color}35`,
+                color: account.color,
+              }}
+            >
+              {account.issuer.charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <p
+                className="text-xs font-bold uppercase tracking-widest leading-tight"
+                style={{ color: account.color }}
+              >
+                {account.issuer}
+              </p>
+              <p className="text-xs mt-0.5" style={{ color: 'rgba(241,245,249,0.42)' }}>
+                {account.name}
+              </p>
+            </div>
+          </div>
+          <CountdownRing progress={progress} secondsLeft={secondsLeft} color={account.color} />
         </div>
 
-        {/* Info */}
-        <div className="flex-1 min-w-0">
-          <p className="text-xs font-medium truncate" style={{ color: account.color + 'cc' }}>
-            {account.issuer}
-          </p>
-          <p className="text-sm truncate" style={{ color: 'rgba(30,27,75,0.6)' }}>{account.name}</p>
+        {/* Code + copy */}
+        <div className="flex items-end justify-between">
           <p
-            className="tabular-nums tracking-widest mt-0.5 font-black"
+            className="tabular-nums font-black"
             style={{
               color: codeColor,
-              fontSize: '1.5rem',
-              lineHeight: 1.2,
+              fontSize: '2.25rem',
+              letterSpacing: '0.1em',
+              lineHeight: 1,
+              textShadow: isLow
+                ? '0 0 24px rgba(248,113,113,0.45)'
+                : `0 0 24px ${account.color}50`,
             }}
           >
             {formattedCode}
           </p>
-        </div>
 
-        {/* Right side */}
-        <div className="flex flex-col items-center gap-2 flex-shrink-0">
-          <CountdownRing progress={progress} secondsLeft={secondsLeft} color={account.color} />
           <div
-            className="flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full transition-all"
+            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all"
             style={copied ? {
               background: 'rgba(16,185,129,0.12)',
-              color: '#059669',
-              border: '1px solid rgba(16,185,129,0.3)',
+              color: '#34d399',
+              border: '1px solid rgba(16,185,129,0.25)',
             } : {
-              background: 'rgba(139,92,246,0.06)',
-              color: 'rgba(30,27,75,0.4)',
-              border: '1px solid rgba(139,92,246,0.12)',
+              background: 'rgba(255,255,255,0.06)',
+              color: 'rgba(241,245,249,0.45)',
+              border: '1px solid rgba(255,255,255,0.09)',
             }}
           >
             {copied ? <CheckIcon /> : <CopyIcon />}

@@ -26,7 +26,7 @@ export function CountdownRing({ progress, secondsLeft, color, size = 44 }: Props
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke="rgba(139,92,246,0.1)"
+          stroke="rgba(255,255,255,0.08)"
           strokeWidth={3}
         />
         {/* Progress arc */}
@@ -46,7 +46,7 @@ export function CountdownRing({ progress, secondsLeft, color, size = 44 }: Props
       <span
         className="absolute font-bold tabular-nums"
         style={{
-          color: isLow ? '#ef4444' : 'rgba(30,27,75,0.55)',
+          color: isLow ? '#f87171' : 'rgba(241,245,249,0.45)',
           fontSize: 11,
         }}
       >

@@ -11,12 +11,12 @@ button, input, a {
 }
 
 button:focus-visible {
-  outline: 2px solid rgba(139, 92, 246, 0.45);
+  outline: 2px solid rgba(0, 194, 255, 0.45);
   outline-offset: 2px;
 }
 
 body {
-  background: #e8e4f8;
+  background: #060b18;
   font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
@@ -26,93 +26,58 @@ body {
   min-height: 100svh;
 }
 
-/* ── Pastel aurora orbs ── */
-.aurora-orb {
+/* ── Background glow ── */
+.bg-glow {
   position: absolute;
-  border-radius: 50%;
+  inset: 0;
   pointer-events: none;
-  will-change: transform;
+  background:
+    radial-gradient(ellipse 70% 55% at 10% 5%,  rgba(0, 194, 255, 0.09) 0%, transparent 60%),
+    radial-gradient(ellipse 55% 60% at 90% 90%,  rgba(167, 139, 250, 0.09) 0%, transparent 60%),
+    radial-gradient(ellipse 45% 40% at 60% 40%,  rgba(0, 194, 255, 0.03) 0%, transparent 65%);
 }
 
-.aurora-1 {
-  width: 700px;
-  height: 700px;
-  background: radial-gradient(circle, rgba(251, 207, 232, 0.85) 0%, transparent 70%);
-  filter: blur(100px);
-  top: -200px;
-  left: -150px;
-  animation: float1 11s ease-in-out infinite alternate;
-}
-
-.aurora-2 {
-  width: 600px;
-  height: 600px;
-  background: radial-gradient(circle, rgba(221, 214, 254, 0.85) 0%, transparent 70%);
-  filter: blur(90px);
-  top: -100px;
-  right: -150px;
-  animation: float2 14s ease-in-out infinite alternate;
-}
-
-.aurora-3 {
-  width: 800px;
-  height: 800px;
-  background: radial-gradient(circle, rgba(167, 243, 208, 0.45) 0%, transparent 70%);
-  filter: blur(120px);
-  bottom: -150px;
-  left: -200px;
-  animation: float3 17s ease-in-out infinite alternate;
-}
-
-@keyframes float1 {
-  from { transform: translate(0, 0) scale(1); }
-  to   { transform: translate(48px, 36px) scale(1.14); }
-}
-
-@keyframes float2 {
-  from { transform: translate(0, 0) scale(1.1); }
-  to   { transform: translate(-36px, 52px) scale(1); }
-}
-
-@keyframes float3 {
-  from { transform: translate(0, 0) scale(1); }
-  to   { transform: translate(70px, -48px) scale(1.18); }
-}
-
-/* ── Glass card (light) ── */
+/* ── Dark glass card ── */
 .glass-card {
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.92);
+  background: rgba(13, 20, 38, 0.75);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.07);
   box-shadow:
-    0 8px 32px rgba(139, 92, 246, 0.08),
-    0 2px 8px rgba(0, 0, 0, 0.05),
-    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    0 4px 28px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: border-color 0.22s ease, box-shadow 0.22s ease;
 }
 
-/* ── Input (light) ── */
+.glass-card:hover {
+  border-color: rgba(255, 255, 255, 0.13);
+  box-shadow:
+    0 8px 36px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* ── Input (dark) ── */
 .aurora-input {
-  background: rgba(255, 255, 255, 0.82);
-  border: 1px solid rgba(139, 92, 246, 0.2);
-  color: #1e1b4b;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #f1f5f9;
   outline: none;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .aurora-input:focus {
-  border-color: rgba(139, 92, 246, 0.55);
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+  border-color: rgba(0, 194, 255, 0.5);
+  box-shadow: 0 0 0 3px rgba(0, 194, 255, 0.1);
 }
 
 .aurora-input::placeholder {
-  color: rgba(30, 27, 75, 0.35);
+  color: rgba(241, 245, 249, 0.28);
 }
 
-/* ── Mascot ── */
+/* ── Animations (kept for DevModule / any future use) ── */
 @keyframes mascotFloat {
-  0%, 100% { transform: translateY(0px);    }
-  50%       { transform: translateY(-7px);  }
+  0%, 100% { transform: translateY(0px);   }
+  50%       { transform: translateY(-7px); }
 }
 
 @keyframes mascotExcited {

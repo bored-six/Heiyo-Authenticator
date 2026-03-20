@@ -125,65 +125,63 @@ export default function App() {
 
   return (
     <>
-      {/* ── Full-screen aurora background ── */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none" style={{ background: '#edeaff', zIndex: 0 }}>
-        <div className="aurora-orb aurora-1" />
-        <div className="aurora-orb aurora-2" />
-        <div className="aurora-orb aurora-3" />
+      {/* ── Deep background with glow ── */}
+      <div className="fixed inset-0 pointer-events-none" style={{ background: '#060b18', zIndex: 0 }}>
+        <div className="bg-glow" />
       </div>
 
-      {/* ── App shell: full viewport ── */}
+      {/* ── App shell ── */}
       <div className="relative z-10 flex min-h-screen">
 
-        {/* ══════════════════════════════
-            SIDEBAR — desktop only
-        ══════════════════════════════ */}
+        {/* ══════════════════════
+            SIDEBAR — desktop
+        ══════════════════════ */}
         <aside
           className="hidden sm:flex flex-col flex-shrink-0"
           style={{
-            width: 300,
-            background: 'rgba(243,240,255,0.88)',
-            backdropFilter: 'blur(48px) saturate(180%)',
-            WebkitBackdropFilter: 'blur(48px) saturate(180%)',
-            borderRight: '1px solid rgba(139,92,246,0.13)',
+            width: 260,
+            background: 'rgba(8, 14, 28, 0.96)',
+            backdropFilter: 'blur(40px)',
+            WebkitBackdropFilter: 'blur(40px)',
+            borderRight: '1px solid rgba(255,255,255,0.06)',
           }}
         >
-          {/* Logo */}
-          <div className="px-7 pt-8 pb-6">
+          {/* Brand */}
+          <div className="px-6 pt-8 pb-7">
             <div className="flex items-center gap-3.5">
               <div
-                className="w-10 h-10 rounded-2xl flex items-center justify-center text-white flex-shrink-0"
+                className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0"
                 style={{
-                  background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-                  boxShadow: '0 6px 20px rgba(99,102,241,0.42)',
+                  background: 'linear-gradient(135deg, #00c2ff 0%, #0090ff 100%)',
+                  boxShadow: '0 0 24px rgba(0, 194, 255, 0.45)',
+                  color: '#060b18',
                 }}
               >
                 <ShieldIcon size={18} />
               </div>
               <div>
-                <p className="font-bold text-[15px] leading-tight" style={{ color: '#1e1b4b' }}>Heiyo</p>
-                <p className="text-xs font-medium" style={{ color: 'rgba(30,27,75,0.42)' }}>Authenticator</p>
+                <p className="font-bold text-[15px] leading-tight" style={{ color: '#f1f5f9' }}>Heiyo</p>
+                <p className="text-xs font-medium" style={{ color: 'rgba(241,245,249,0.35)' }}>Authenticator</p>
               </div>
             </div>
           </div>
 
           {/* Divider */}
-          <div className="mx-6 mb-5" style={{ height: 1, background: 'rgba(139,92,246,0.12)' }} />
+          <div className="mx-5 mb-5" style={{ height: 1, background: 'rgba(255,255,255,0.06)' }} />
 
           {/* Nav */}
-          <nav className="px-4 flex flex-col gap-1">
+          <nav className="px-3 flex flex-col gap-1">
             {TABS.filter(t => t.key !== 'dev').map(({ key, label, icon }) => (
               <button
                 key={key}
                 onClick={() => setTab(key)}
-                className="flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-semibold text-left transition-all w-full"
+                className="flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-semibold text-left transition-all w-full"
                 style={tab === key ? {
-                  background: 'linear-gradient(135deg, rgba(99,102,241,0.13), rgba(139,92,246,0.09))',
-                  color: '#4338ca',
-                  boxShadow: '0 2px 12px rgba(99,102,241,0.12)',
-                  border: '1px solid rgba(99,102,241,0.2)',
+                  background: 'rgba(0, 194, 255, 0.1)',
+                  color: '#00c2ff',
+                  border: '1px solid rgba(0, 194, 255, 0.2)',
                 } : {
-                  color: 'rgba(30,27,75,0.5)',
+                  color: 'rgba(241,245,249,0.4)',
                   border: '1px solid transparent',
                 }}
               >
@@ -193,8 +191,8 @@ export default function App() {
                   <span
                     className="ml-auto text-xs font-bold px-2 py-0.5 rounded-full"
                     style={{
-                      background: tab === 'vault' ? 'rgba(99,102,241,0.15)' : 'rgba(30,27,75,0.08)',
-                      color: tab === 'vault' ? '#4338ca' : 'rgba(30,27,75,0.4)',
+                      background: tab === 'vault' ? 'rgba(0,194,255,0.15)' : 'rgba(255,255,255,0.08)',
+                      color: tab === 'vault' ? '#00c2ff' : 'rgba(241,245,249,0.4)',
                     }}
                   >
                     {accounts.length}
@@ -206,19 +204,19 @@ export default function App() {
 
           <div className="flex-1" />
 
-          {/* Stats card */}
+          {/* Bottom stat */}
           <div className="px-5 pb-7">
             <div
-              className="rounded-2xl px-5 py-4 flex items-center gap-4"
+              className="rounded-xl px-4 py-4 flex items-center gap-3"
               style={{
-                background: 'linear-gradient(135deg, rgba(99,102,241,0.08), rgba(139,92,246,0.05))',
-                border: '1px solid rgba(99,102,241,0.13)',
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(255,255,255,0.07)',
               }}
             >
               <p
-                className="text-4xl font-black leading-none flex-shrink-0"
+                className="text-3xl font-black leading-none flex-shrink-0"
                 style={{
-                  background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
+                  background: 'linear-gradient(135deg, #00c2ff, #a78bfa)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text',
@@ -227,64 +225,57 @@ export default function App() {
                 {accounts.length}
               </p>
               <div>
-                <p className="text-sm font-semibold leading-tight" style={{ color: '#1a1740' }}>
+                <p className="text-sm font-semibold leading-tight" style={{ color: '#f1f5f9' }}>
                   account{accounts.length !== 1 ? 's' : ''} secured
                 </p>
-                <p className="text-xs mt-0.5" style={{ color: 'rgba(30,27,75,0.38)' }}>RFC 6238 · TOTP</p>
+                <p className="text-xs mt-0.5" style={{ color: 'rgba(241,245,249,0.3)' }}>RFC 6238 · TOTP</p>
               </div>
             </div>
           </div>
         </aside>
 
-        {/* ═══════════════════════════════════
-            MAIN CONTENT AREA
-        ═══════════════════════════════════ */}
-        <div
-          className="flex-1 flex flex-col min-w-0"
-          style={{
-            background: 'rgba(255,255,255,0.38)',
-            backdropFilter: 'blur(24px)',
-            WebkitBackdropFilter: 'blur(24px)',
-          }}
-        >
+        {/* ═══════════════════════
+            MAIN CONTENT
+        ═══════════════════════ */}
+        <div className="flex-1 flex flex-col min-w-0">
 
           {/* ── Mobile header ── */}
           <div
             className="sm:hidden flex items-center justify-between px-5 py-4 flex-shrink-0"
             style={{
-              background: 'rgba(243,240,255,0.88)',
+              background: 'rgba(8,14,28,0.96)',
               backdropFilter: 'blur(40px)',
               WebkitBackdropFilter: 'blur(40px)',
-              borderBottom: '1px solid rgba(139,92,246,0.1)',
+              borderBottom: '1px solid rgba(255,255,255,0.06)',
             }}
           >
             <div className="flex items-center gap-2.5">
               <div
-                className="w-8 h-8 rounded-xl flex items-center justify-center text-white flex-shrink-0"
-                style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', boxShadow: '0 4px 12px rgba(99,102,241,0.4)' }}
+                className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ background: 'linear-gradient(135deg, #00c2ff, #0090ff)', boxShadow: '0 0 14px rgba(0,194,255,0.4)', color: '#060b18' }}
               >
                 <ShieldIcon size={14} />
               </div>
               <h1 className="font-bold text-lg" style={{
-                background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
+                background: 'linear-gradient(135deg, #00c2ff, #a78bfa)',
                 WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
               }}>Heiyo Authenticator</h1>
             </div>
             <div className="flex items-center gap-2">
               {pinSet ? (
-                <button onClick={lock} className="w-9 h-9 rounded-xl flex items-center justify-center transition-all hover:opacity-80"
-                  style={{ background: 'rgba(255,255,255,0.7)', border: '1px solid rgba(139,92,246,0.2)', color: '#5b21b6' }}>
+                <button onClick={lock} className="w-9 h-9 rounded-xl flex items-center justify-center transition-all"
+                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(241,245,249,0.7)' }}>
                   <LockIcon />
                 </button>
               ) : (
-                <button onClick={() => setShowSetPin(true)} className="w-9 h-9 rounded-xl flex items-center justify-center transition-all hover:opacity-80"
-                  style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)', color: '#4338ca' }}>
+                <button onClick={() => setShowSetPin(true)} className="w-9 h-9 rounded-xl flex items-center justify-center transition-all"
+                  style={{ background: 'rgba(0,194,255,0.1)', border: '1px solid rgba(0,194,255,0.2)', color: '#00c2ff' }}>
                   <KeyIcon />
                 </button>
               )}
               {tab === 'vault' && (
-                <button onClick={() => setShowAdd(true)} className="w-9 h-9 rounded-xl flex items-center justify-center text-white transition-all active:scale-95"
-                  style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)', boxShadow: '0 4px 12px rgba(99,102,241,0.4)' }}>
+                <button onClick={() => setShowAdd(true)} className="w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-95"
+                  style={{ background: 'linear-gradient(135deg, #00c2ff, #0090ff)', boxShadow: '0 4px 12px rgba(0,194,255,0.35)', color: '#060b18' }}>
                   <PlusIcon size={16} />
                 </button>
               )}
@@ -292,15 +283,15 @@ export default function App() {
           </div>
 
           {/* ── Mobile tab switcher ── */}
-          <div className="sm:hidden px-5 py-3 flex-shrink-0" style={{ borderBottom: '1px solid rgba(139,92,246,0.08)' }}>
-            <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'rgba(99,102,241,0.07)', border: '1px solid rgba(99,102,241,0.1)' }}>
-              {TABS.map(({ key, label }) => (
+          <div className="sm:hidden px-5 py-3 flex-shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+            <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+              {TABS.filter(t => t.key !== 'dev').map(({ key, label }) => (
                 <button
                   key={key} onClick={() => setTab(key)}
                   className="flex-1 py-2 rounded-lg text-sm font-semibold transition-all"
                   style={tab === key
-                    ? { background: 'linear-gradient(135deg, #ede9fe, #e0e7ff)', color: '#4338ca', boxShadow: '0 2px 8px rgba(99,102,241,0.15)', border: '1px solid rgba(99,102,241,0.18)' }
-                    : { background: 'transparent', color: 'rgba(30,27,75,0.38)', border: '1px solid transparent' }
+                    ? { background: 'rgba(0,194,255,0.12)', color: '#00c2ff', border: '1px solid rgba(0,194,255,0.2)' }
+                    : { background: 'transparent', color: 'rgba(241,245,249,0.38)', border: '1px solid transparent' }
                   }
                 >
                   {label}
@@ -314,14 +305,14 @@ export default function App() {
             className="hidden sm:flex items-center justify-between flex-shrink-0"
             style={{
               padding: '32px 52px',
-              borderBottom: '1px solid rgba(139,92,246,0.09)',
+              borderBottom: '1px solid rgba(255,255,255,0.06)',
             }}
           >
             <div>
-              <h2 className="font-bold text-3xl" style={{ color: '#1a1740' }}>
+              <h2 className="font-bold text-3xl" style={{ color: '#f1f5f9' }}>
                 {tab === 'vault' ? 'My Codes' : 'Developer Tools'}
               </h2>
-              <p className="text-sm mt-1 font-medium" style={{ color: 'rgba(30,27,75,0.38)' }}>
+              <p className="text-sm mt-1.5 font-medium" style={{ color: 'rgba(241,245,249,0.38)' }}>
                 {tab === 'vault'
                   ? `${accounts.length} account${accounts.length !== 1 ? 's' : ''} · 30-second rotating codes`
                   : 'Generate secrets, scan QR codes, validate codes'}
@@ -331,7 +322,7 @@ export default function App() {
             <div className="flex items-center gap-3">
               {tab === 'vault' && accounts.length > 0 && (
                 <div className="relative">
-                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: 'rgba(30,27,75,0.35)' }}><SearchIcon /></span>
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: 'rgba(241,245,249,0.3)' }}><SearchIcon /></span>
                   <input
                     type="text"
                     placeholder="Search accounts…"
@@ -341,7 +332,7 @@ export default function App() {
                     style={{ width: 260 }}
                   />
                   {search && (
-                    <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: 'rgba(30,27,75,0.35)' }}>
+                    <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: 'rgba(241,245,249,0.3)' }}>
                       <XIcon />
                     </button>
                   )}
@@ -352,7 +343,7 @@ export default function App() {
                 <button
                   onClick={lock}
                   className="flex items-center gap-2 px-4 h-10 rounded-xl text-sm font-semibold transition-all hover:opacity-80"
-                  style={{ background: 'rgba(255,255,255,0.7)', border: '1px solid rgba(139,92,246,0.2)', color: '#5b21b6', backdropFilter: 'blur(8px)' }}
+                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(241,245,249,0.8)' }}
                 >
                   <LockIcon /> Lock
                 </button>
@@ -360,7 +351,7 @@ export default function App() {
                 <button
                   onClick={() => setShowSetPin(true)}
                   className="flex items-center gap-2 px-4 h-10 rounded-xl text-sm font-semibold transition-all hover:opacity-80"
-                  style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)', color: '#4338ca' }}
+                  style={{ background: 'rgba(0,194,255,0.08)', border: '1px solid rgba(0,194,255,0.2)', color: '#00c2ff' }}
                 >
                   <KeyIcon /> Set PIN
                 </button>
@@ -369,10 +360,11 @@ export default function App() {
               {tab === 'vault' && (
                 <button
                   onClick={() => setShowAdd(true)}
-                  className="flex items-center gap-2 px-5 h-10 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90 active:scale-95"
+                  className="flex items-center gap-2 px-5 h-10 rounded-xl text-sm font-bold transition-all hover:opacity-90 active:scale-95"
                   style={{
-                    background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-                    boxShadow: '0 4px 16px rgba(99,102,241,0.42)',
+                    background: 'linear-gradient(135deg, #00c2ff 0%, #0090ff 100%)',
+                    boxShadow: '0 4px 16px rgba(0, 194, 255, 0.35)',
+                    color: '#060b18',
                   }}
                 >
                   <PlusIcon size={16} /> Add Account
@@ -387,9 +379,9 @@ export default function App() {
             {/* Mobile search */}
             {tab === 'vault' && accounts.length > 2 && (
               <div className="relative mb-5 sm:hidden">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'rgba(30,27,75,0.35)' }}><SearchIcon /></span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'rgba(241,245,249,0.3)' }}><SearchIcon /></span>
                 <input type="text" placeholder="Search accounts…" value={search} onChange={e => setSearch(e.target.value)} className="aurora-input w-full rounded-xl pl-9 pr-8 py-2.5 text-sm" />
-                {search && <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: 'rgba(30,27,75,0.35)' }}><XIcon /></button>}
+                {search && <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: 'rgba(241,245,249,0.3)' }}><XIcon /></button>}
               </div>
             )}
 
@@ -397,48 +389,46 @@ export default function App() {
               <>
                 {accounts.length === 0 ? (
 
-                  /* ── Empty state — desktop-native ── */
+                  /* ── Empty state ── */
                   <div className="flex flex-col items-center justify-center h-full" style={{ minHeight: 480 }}>
 
-                    {/* Icon */}
                     <div className="mb-8">
                       <div
-                        className="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto"
+                        className="w-24 h-24 rounded-3xl flex items-center justify-center mx-auto"
                         style={{
-                          background: 'linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.06))',
-                          border: '1px solid rgba(99,102,241,0.16)',
-                          boxShadow: '0 8px 32px rgba(99,102,241,0.1)',
-                          color: '#6366f1',
+                          background: 'rgba(0, 194, 255, 0.07)',
+                          border: '1px solid rgba(0, 194, 255, 0.15)',
+                          boxShadow: '0 0 52px rgba(0, 194, 255, 0.12)',
+                          color: '#00c2ff',
                         }}
                       >
-                        <ShieldIcon size={36} />
+                        <ShieldIcon size={40} />
                       </div>
                     </div>
 
-                    <h2 className="font-bold text-center mb-3" style={{ color: '#1a1740', fontSize: '1.75rem' }}>
+                    <h2 className="font-bold text-center mb-3" style={{ color: '#f1f5f9', fontSize: '1.875rem' }}>
                       Your vault is empty
                     </h2>
                     <p
                       className="text-[15px] text-center mb-10 leading-relaxed"
-                      style={{ color: 'rgba(30,27,75,0.45)', maxWidth: 460 }}
+                      style={{ color: 'rgba(241,245,249,0.38)', maxWidth: 460 }}
                     >
                       Add your first account to start generating time-based 2FA codes — all processed locally, never leaves your browser.
                     </p>
 
                     <button
                       onClick={() => setShowAdd(true)}
-                      className="flex items-center gap-2.5 px-8 py-3.5 rounded-2xl text-sm font-bold text-white mb-12 transition-all hover:scale-105 active:scale-95"
+                      className="flex items-center gap-2.5 px-8 py-3.5 rounded-2xl text-sm font-bold mb-12 transition-all hover:scale-105 active:scale-95"
                       style={{
-                        background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-                        boxShadow: '0 12px 40px rgba(99,102,241,0.38), 0 4px 12px rgba(139,92,246,0.22)',
-                        letterSpacing: '0.01em',
+                        background: 'linear-gradient(135deg, #00c2ff 0%, #0090ff 100%)',
+                        boxShadow: '0 12px 40px rgba(0, 194, 255, 0.3), 0 4px 12px rgba(0, 144, 255, 0.2)',
+                        color: '#060b18',
                       }}
                     >
                       <PlusIcon size={18} />
                       Add Your First Account
                     </button>
 
-                    {/* Feature badges */}
                     <div className="flex items-center gap-3 flex-wrap justify-center">
                       {[
                         { icon: <ShieldIcon size={12} />, label: 'No server needed' },
@@ -449,13 +439,12 @@ export default function App() {
                           key={label}
                           className="flex items-center gap-2 px-4 py-2.5 rounded-full text-xs font-semibold"
                           style={{
-                            background: 'rgba(255,255,255,0.6)',
-                            border: '1px solid rgba(99,102,241,0.16)',
-                            color: 'rgba(30,27,75,0.6)',
-                            backdropFilter: 'blur(8px)',
+                            background: 'rgba(255,255,255,0.04)',
+                            border: '1px solid rgba(255,255,255,0.09)',
+                            color: 'rgba(241,245,249,0.45)',
                           }}
                         >
-                          <span style={{ color: '#6366f1' }}>{icon}</span>
+                          <span style={{ color: '#00c2ff' }}>{icon}</span>
                           {label}
                         </span>
                       ))}
@@ -465,8 +454,8 @@ export default function App() {
                 ) : filtered.length === 0 ? (
 
                   <div className="flex flex-col items-center justify-center py-24 gap-3">
-                    <p className="text-sm font-medium" style={{ color: 'rgba(30,27,75,0.45)' }}>No results for "{search}"</p>
-                    <button onClick={() => setSearch('')} className="text-sm font-semibold" style={{ color: '#6366f1' }}>Clear search</button>
+                    <p className="text-sm font-medium" style={{ color: 'rgba(241,245,249,0.4)' }}>No results for "{search}"</p>
+                    <button onClick={() => setSearch('')} className="text-sm font-semibold" style={{ color: '#00c2ff' }}>Clear search</button>
                   </div>
 
                 ) : (
