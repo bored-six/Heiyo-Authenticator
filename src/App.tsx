@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAccounts } from './hooks/useAccounts'
 import { TOTPCard } from './components/TOTPCard'
 import { AddAccount } from './components/AddAccount'
+import { EditAccount } from './components/EditAccount'
 import { DevModule } from './components/DevModule'
+import type { Account } from './types'
 
 type Tab = 'vault' | 'dev'
 
@@ -43,7 +45,6 @@ function LockIcon() {
     </svg>
   )
 }
-
 function SearchIcon() {
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -66,6 +67,40 @@ function WifiOffIcon({ size = 11 }: { size?: number }) {
     </svg>
   )
 }
+function EyeIcon({ size = 16 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  )
+}
+function EyeOffIcon({ size = 16 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" />
+      <line x1="1" y1="1" x2="23" y2="23" />
+    </svg>
+  )
+}
+function ExportIcon({ size = 16 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
+    </svg>
+  )
+}
+function ImportIcon({ size = 16 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+      <polyline points="17 8 12 3 7 8" />
+      <line x1="12" y1="3" x2="12" y2="15" />
+    </svg>
+  )
+}
 
 const TABS: { key: Tab; label: string; icon: React.ReactNode }[] = [
   { key: 'vault', label: 'My Codes',  icon: <GridIcon /> },
@@ -73,10 +108,15 @@ const TABS: { key: Tab; label: string; icon: React.ReactNode }[] = [
 ]
 
 export default function App() {
-  const { accounts, addAccount, removeAccount } = useAccounts()
-  const [tab, setTab]     = useState<Tab>('vault')
-  const [showAdd, setShowAdd] = useState(false)
-  const [search, setSearch]   = useState('')
+  const { accounts, addAccount, removeAccount, updateAccount, reorderAccounts } = useAccounts()
+  const [tab, setTab]           = useState<Tab>('vault')
+  const [showAdd, setShowAdd]   = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [search, setSearch]     = useState('')
+  const [codesVisible, setCodesVisible] = useState(true)
+  const [dragIndex, setDragIndex]       = useState<number | null>(null)
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
+  const importRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -91,6 +131,67 @@ export default function App() {
     a.name.toLowerCase().includes(search.toLowerCase()) ||
     a.issuer.toLowerCase().includes(search.toLowerCase())
   )
+
+  // Drag is disabled while search is active (indices would mismatch)
+  const dragEnabled = !search
+
+  const handleDragStart = (index: number) => setDragIndex(index)
+  const handleDragOver  = (index: number) => setDragOverIndex(index)
+  const handleDrop = (dropIndex: number) => {
+    if (dragIndex === null || dragIndex === dropIndex) return
+    const newOrder = [...accounts]
+    const [moved] = newOrder.splice(dragIndex, 1)
+    newOrder.splice(dropIndex, 0, moved)
+    reorderAccounts(newOrder)
+    setDragIndex(null)
+    setDragOverIndex(null)
+  }
+  const handleDragEnd = () => {
+    setDragIndex(null)
+    setDragOverIndex(null)
+  }
+
+  const handleExport = () => {
+    const data = JSON.stringify({ version: 1, accounts }, null, 2)
+    const blob = new Blob([data], { type: 'application/json' })
+    const url  = URL.createObjectURL(blob)
+    const a    = document.createElement('a')
+    a.href     = url
+    a.download = `heiyo-backup-${new Date().toISOString().split('T')[0]}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      try {
+        const parsed = JSON.parse(ev.target?.result as string)
+        const imported: Account[] = Array.isArray(parsed) ? parsed : (parsed.accounts ?? [])
+        if (!Array.isArray(imported) || imported.length === 0) throw new Error('No accounts found')
+        const msg = accounts.length > 0
+          ? `Replace your ${accounts.length} existing account(s) with ${imported.length} from this backup?`
+          : `Import ${imported.length} account(s) from this backup?`
+        if (!window.confirm(msg)) return
+        reorderAccounts(imported)
+      } catch {
+        alert('Invalid backup file. Please use a file exported from Heiyo.')
+      }
+    }
+    reader.readAsText(file)
+    e.target.value = ''
+  }
+
+  const editingAccount = editingId ? accounts.find(a => a.id === editingId) ?? null : null
+
+  // Shared icon button style helper
+  const iconBtnStyle = (active = false) => ({
+    background: active ? 'rgba(0,194,255,0.12)' : 'rgba(255,255,255,0.06)',
+    border: active ? '1px solid rgba(0,194,255,0.2)' : '1px solid rgba(255,255,255,0.09)',
+    color: active ? '#00c2ff' : 'rgba(241,245,249,0.45)',
+  })
 
   return (
     <>
@@ -231,6 +332,39 @@ export default function App() {
               }}>Heiyo Authenticator</h1>
             </div>
             <div className="flex items-center gap-2">
+              {tab === 'vault' && accounts.length > 0 && (
+                <button
+                  onClick={() => setCodesVisible(v => !v)}
+                  className="w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-95"
+                  style={iconBtnStyle(!codesVisible)}
+                  title={codesVisible ? 'Hide codes' : 'Show codes'}
+                >
+                  {codesVisible ? <EyeIcon size={15} /> : <EyeOffIcon size={15} />}
+                </button>
+              )}
+              {tab === 'vault' && (
+                <>
+                  <input ref={importRef} type="file" accept=".json" onChange={handleImportFile} className="hidden" />
+                  <button
+                    onClick={() => importRef.current?.click()}
+                    className="w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-95"
+                    style={iconBtnStyle()}
+                    title="Import backup"
+                  >
+                    <ImportIcon size={15} />
+                  </button>
+                </>
+              )}
+              {tab === 'vault' && accounts.length > 0 && (
+                <button
+                  onClick={handleExport}
+                  className="w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-95"
+                  style={iconBtnStyle()}
+                  title="Export backup"
+                >
+                  <ExportIcon size={15} />
+                </button>
+              )}
               {tab === 'vault' && (
                 <button onClick={() => setShowAdd(true)} className="w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-95"
                   style={{ background: 'linear-gradient(135deg, #00c2ff, #0090ff)', boxShadow: '0 4px 12px rgba(0,194,255,0.35)', color: '#060b18' }}>
@@ -261,10 +395,7 @@ export default function App() {
           {/* ── Desktop header ── */}
           <header
             className="hidden sm:flex items-center justify-between flex-shrink-0"
-            style={{
-              padding: '32px 52px',
-              borderBottom: '1px solid rgba(255,255,255,0.06)',
-            }}
+            style={{ padding: '32px 52px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}
           >
             <div>
               <h2 className="font-bold text-3xl" style={{ color: '#f1f5f9' }}>
@@ -278,6 +409,46 @@ export default function App() {
             </div>
 
             <div className="flex items-center gap-3">
+              {/* Eye toggle */}
+              {tab === 'vault' && accounts.length > 0 && (
+                <button
+                  onClick={() => setCodesVisible(v => !v)}
+                  className="w-9 h-9 rounded-xl flex items-center justify-center transition-all hover:opacity-80"
+                  style={iconBtnStyle(!codesVisible)}
+                  title={codesVisible ? 'Hide codes' : 'Show codes'}
+                >
+                  {codesVisible ? <EyeIcon /> : <EyeOffIcon />}
+                </button>
+              )}
+
+              {/* Export */}
+              {tab === 'vault' && accounts.length > 0 && (
+                <button
+                  onClick={handleExport}
+                  className="w-9 h-9 rounded-xl flex items-center justify-center transition-all hover:opacity-80"
+                  style={iconBtnStyle()}
+                  title="Export backup"
+                >
+                  <ExportIcon />
+                </button>
+              )}
+
+              {/* Import */}
+              {tab === 'vault' && (
+                <>
+                  <input ref={importRef} type="file" accept=".json" onChange={handleImportFile} className="hidden" />
+                  <button
+                    onClick={() => importRef.current?.click()}
+                    className="w-9 h-9 rounded-xl flex items-center justify-center transition-all hover:opacity-80"
+                    style={iconBtnStyle()}
+                    title="Import backup"
+                  >
+                    <ImportIcon />
+                  </button>
+                </>
+              )}
+
+              {/* Search */}
               {tab === 'vault' && accounts.length > 0 && (
                 <div className="relative">
                   <span className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: 'rgba(241,245,249,0.3)' }}><SearchIcon /></span>
@@ -297,6 +468,7 @@ export default function App() {
                 </div>
               )}
 
+              {/* Add Account */}
               {tab === 'vault' && (
                 <button
                   onClick={() => setShowAdd(true)}
@@ -401,8 +573,21 @@ export default function App() {
                 ) : (
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                    {filtered.map(account => (
-                      <TOTPCard key={account.id} account={account} onDelete={removeAccount} />
+                    {filtered.map((account, index) => (
+                      <TOTPCard
+                        key={account.id}
+                        account={account}
+                        codesVisible={codesVisible}
+                        onDelete={removeAccount}
+                        onEdit={setEditingId}
+                        isDragging={dragIndex === index}
+                        isDragOver={dragOverIndex === index && dragIndex !== index}
+                        onDragStart={() => handleDragStart(index)}
+                        onDragOver={() => handleDragOver(index)}
+                        onDrop={() => handleDrop(index)}
+                        onDragEnd={handleDragEnd}
+                        dragEnabled={dragEnabled}
+                      />
                     ))}
                   </div>
 
@@ -416,6 +601,13 @@ export default function App() {
       </div>
 
       {showAdd && <AddAccount onAdd={addAccount} onClose={() => setShowAdd(false)} />}
+      {editingAccount && (
+        <EditAccount
+          account={editingAccount}
+          onSave={(name, issuer) => updateAccount(editingAccount.id, { name, issuer })}
+          onClose={() => setEditingId(null)}
+        />
+      )}
     </>
   )
 }

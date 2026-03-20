@@ -39,5 +39,13 @@ export function useAccounts() {
     setAccounts(prev => prev.filter(a => a.id !== id))
   }
 
-  return { accounts, addAccount, removeAccount }
+  const updateAccount = (id: string, changes: { name?: string; issuer?: string }) => {
+    setAccounts(prev => prev.map(a => a.id === id ? { ...a, ...changes } : a))
+  }
+
+  const reorderAccounts = (newOrder: Account[]) => {
+    setAccounts(newOrder)
+  }
+
+  return { accounts, addAccount, removeAccount, updateAccount, reorderAccounts }
 }

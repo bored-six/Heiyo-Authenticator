@@ -5,7 +5,16 @@ import { CountdownRing } from './CountdownRing'
 
 interface Props {
   account: Account
+  codesVisible: boolean
   onDelete: (id: string) => void
+  onEdit: (id: string) => void
+  isDragging: boolean
+  isDragOver: boolean
+  onDragStart: () => void
+  onDragOver: () => void
+  onDrop: () => void
+  onDragEnd: () => void
+  dragEnabled: boolean
 }
 
 const SWIPE_THRESHOLD = 72
@@ -17,6 +26,15 @@ function TrashIcon({ size = 20 }: { size?: number }) {
       <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
       <path d="M10 11v6M14 11v6" />
       <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2" />
+    </svg>
+  )
+}
+
+function PencilIcon({ size = 14 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+      <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
     </svg>
   )
 }
@@ -38,7 +56,26 @@ function CheckIcon() {
   )
 }
 
-export function TOTPCard({ account, onDelete }: Props) {
+function GripIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="9" cy="6" r="1" fill="currentColor" stroke="none" />
+      <circle cx="15" cy="6" r="1" fill="currentColor" stroke="none" />
+      <circle cx="9" cy="12" r="1" fill="currentColor" stroke="none" />
+      <circle cx="15" cy="12" r="1" fill="currentColor" stroke="none" />
+      <circle cx="9" cy="18" r="1" fill="currentColor" stroke="none" />
+      <circle cx="15" cy="18" r="1" fill="currentColor" stroke="none" />
+    </svg>
+  )
+}
+
+export function TOTPCard({
+  account, codesVisible,
+  onDelete, onEdit,
+  isDragging, isDragOver,
+  onDragStart, onDragOver, onDrop, onDragEnd,
+  dragEnabled,
+}: Props) {
   const { code, secondsLeft, progress } = useTotp(account.secret)
   const [copied, setCopied] = useState(false)
   const [swipeX, setSwipeX] = useState(0)
@@ -101,7 +138,15 @@ export function TOTPCard({ account, onDelete }: Props) {
   }
 
   return (
-    <div className="group relative overflow-hidden rounded-2xl">
+    <div
+      className="group relative overflow-hidden rounded-2xl"
+      draggable={dragEnabled}
+      onDragStart={dragEnabled ? (e) => { e.dataTransfer.effectAllowed = 'move'; onDragStart() } : undefined}
+      onDragOver={dragEnabled ? (e) => { e.preventDefault(); onDragOver() } : undefined}
+      onDrop={dragEnabled ? (e) => { e.preventDefault(); onDrop() } : undefined}
+      onDragEnd={dragEnabled ? onDragEnd : undefined}
+      style={{ opacity: isDragging ? 0.45 : 1, transition: 'opacity 0.15s' }}
+    >
       {/* Swipe delete — mobile */}
       <div
         className="sm:hidden absolute inset-y-0 right-0 flex flex-col items-center justify-center gap-1"
@@ -120,19 +165,45 @@ export function TOTPCard({ account, onDelete }: Props) {
         </button>
       </div>
 
-      {/* Hover delete — desktop */}
-      <button
-        className="hidden sm:flex absolute top-4 right-4 z-10 items-center justify-center w-7 h-7 rounded-lg opacity-0 group-hover:opacity-100 transition-all active:scale-90"
-        style={{
-          background: 'rgba(220,38,38,0.12)',
-          border: '1px solid rgba(220,38,38,0.25)',
-          color: '#f87171',
-        }}
-        onClick={e => { e.stopPropagation(); onDelete(account.id) }}
-        title="Delete account"
-      >
-        <TrashIcon size={14} />
-      </button>
+      {/* Action buttons — desktop */}
+      <div className="hidden sm:flex absolute top-4 right-4 z-10 items-center gap-1.5 transition-all">
+        {/* Drag handle */}
+        {dragEnabled && (
+          <div
+            className="flex items-center justify-center w-7 h-7 rounded-lg opacity-0 group-hover:opacity-40 transition-all cursor-grab active:cursor-grabbing"
+            style={{ color: 'rgba(241,245,249,0.6)' }}
+            title="Drag to reorder"
+          >
+            <GripIcon />
+          </div>
+        )}
+        {/* Edit */}
+        <button
+          className="flex items-center justify-center w-7 h-7 rounded-lg opacity-0 group-hover:opacity-100 transition-all active:scale-90"
+          style={{
+            background: 'rgba(99,102,241,0.12)',
+            border: '1px solid rgba(99,102,241,0.25)',
+            color: '#818cf8',
+          }}
+          onClick={e => { e.stopPropagation(); onEdit(account.id) }}
+          title="Edit account"
+        >
+          <PencilIcon />
+        </button>
+        {/* Delete — always faintly visible */}
+        <button
+          className="flex items-center justify-center w-7 h-7 rounded-lg opacity-30 group-hover:opacity-100 transition-all active:scale-90"
+          style={{
+            background: 'rgba(220,38,38,0.12)',
+            border: '1px solid rgba(220,38,38,0.25)',
+            color: '#f87171',
+          }}
+          onClick={e => { e.stopPropagation(); onDelete(account.id) }}
+          title="Delete account"
+        >
+          <TrashIcon size={14} />
+        </button>
+      </div>
 
       {/* Glass card */}
       <div
@@ -142,6 +213,8 @@ export function TOTPCard({ account, onDelete }: Props) {
           transform: `translateX(${swipeX}px)`,
           transition: swiping ? 'none' : 'transform 0.25s ease',
           background: `linear-gradient(160deg, ${account.color}0d 0%, rgba(13,20,38,0.75) 45%)`,
+          outline: isDragOver ? '2px solid rgba(0,194,255,0.5)' : '2px solid transparent',
+          outlineOffset: '-2px',
         }}
         onClick={copyCode}
         onTouchStart={onTouchStart}
@@ -181,16 +254,19 @@ export function TOTPCard({ account, onDelete }: Props) {
           <p
             className="tabular-nums font-black"
             style={{
-              color: codeColor,
+              color: codesVisible ? codeColor : 'rgba(241,245,249,0.2)',
               fontSize: '2.25rem',
               letterSpacing: '0.1em',
               lineHeight: 1,
-              textShadow: isLow
+              textShadow: codesVisible && isLow
                 ? '0 0 24px rgba(248,113,113,0.45)'
-                : `0 0 24px ${account.color}50`,
+                : codesVisible
+                  ? `0 0 24px ${account.color}50`
+                  : 'none',
+              fontFamily: codesVisible ? undefined : 'monospace',
             }}
           >
-            {formattedCode}
+            {codesVisible ? formattedCode : '••• •••'}
           </p>
 
           <div
