@@ -14,18 +14,18 @@ function toBase64(buf: ArrayBuffer | Uint8Array): string {
   return btoa(binary)
 }
 
-function fromBase64(str: string): Uint8Array {
+function fromBase64(str: string): Uint8Array<ArrayBuffer> {
   const binary = atob(str)
   const bytes = new Uint8Array(binary.length)
   for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
   return bytes
 }
 
-export function generateSalt(): Uint8Array {
+export function generateSalt(): Uint8Array<ArrayBuffer> {
   return crypto.getRandomValues(new Uint8Array(SALT_LENGTH))
 }
 
-async function deriveAesKey(password: string, salt: Uint8Array): Promise<CryptoKey> {
+async function deriveAesKey(password: string, salt: Uint8Array<ArrayBuffer>): Promise<CryptoKey> {
   const keyMaterial = await crypto.subtle.importKey(
     'raw',
     new TextEncoder().encode(password),
@@ -50,7 +50,7 @@ async function computeVerificationHash(key: CryptoKey): Promise<string> {
 
 export async function createMasterKey(
   password: string,
-  salt: Uint8Array
+  salt: Uint8Array<ArrayBuffer>
 ): Promise<{ key: CryptoKey; verificationHash: string; saltBase64: string }> {
   const key = await deriveAesKey(password, salt)
   const verificationHash = await computeVerificationHash(key)
