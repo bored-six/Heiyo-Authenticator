@@ -323,8 +323,22 @@ export default function App() {
 
   return (
     <>
-      {/* ── Deep background with glow ── */}
+      {/* ── Deep background with mesh blobs ── */}
       <div className="fixed inset-0 pointer-events-none" style={{ background: '#020617', zIndex: 0 }}>
+        {/* Blue blob — top-left */}
+        <div className="absolute" style={{
+          width: 700, height: 700, borderRadius: '50%',
+          background: 'rgba(0,194,255,0.07)',
+          filter: 'blur(130px)',
+          top: -280, left: -180,
+        }} />
+        {/* Purple blob — bottom-right */}
+        <div className="absolute" style={{
+          width: 800, height: 800, borderRadius: '50%',
+          background: 'rgba(124,58,237,0.08)',
+          filter: 'blur(150px)',
+          bottom: -300, right: -200,
+        }} />
         <div className="bg-glow" />
       </div>
 

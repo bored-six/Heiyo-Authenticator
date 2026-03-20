@@ -95,8 +95,9 @@ export function TOTPCard({
   const isScrolling = useRef<boolean | null>(null)
 
   const formattedCode = code.slice(0, 3) + ' ' + code.slice(3)
-  const isLow = secondsLeft <= 5
-  const codeColor = isLow ? '#f87171' : account.color
+  const isLow   = secondsLeft <= 5
+  const isAmber = secondsLeft <= 10 && secondsLeft > 5
+  const codeColor = isLow ? '#f87171' : isAmber ? '#f59e0b' : account.color
 
   const copyCode = async () => {
     if (revealed) {
@@ -107,7 +108,6 @@ export function TOTPCard({
     await navigator.clipboard.writeText(code)
     setCopied(true)
     setTimeout(() => setCopied(false), 1500)
-    // TOTP codes expire every 30s — clear clipboard to avoid stale code exposure
     setTimeout(() => { navigator.clipboard.writeText('').catch(() => {}) }, 30_000)
   }
 
@@ -154,9 +154,9 @@ export function TOTPCard({
       onDragOver={dragEnabled ? (e) => { e.preventDefault(); onDragOver() } : undefined}
       onDrop={dragEnabled ? (e) => { e.preventDefault(); onDrop() } : undefined}
       onDragEnd={dragEnabled ? onDragEnd : undefined}
-      style={{ opacity: isDragging ? 0.45 : 1, transition: 'opacity 0.15s' }}
+      style={{ opacity: isDragging ? 0.4 : 1, transition: 'opacity 0.15s' }}
     >
-      {/* ── Mobile swipe-to-delete panel (hidden on desktop) ── */}
+      {/* ── Mobile swipe-to-delete panel ── */}
       <div
         className="sm:hidden absolute inset-y-0 right-0 flex flex-col items-center justify-center gap-1"
         style={{
@@ -174,11 +174,11 @@ export function TOTPCard({
         </button>
       </div>
 
-      {/* ── Drag grip — left edge, desktop only ── */}
+      {/* ── Drag grip — desktop hover ── */}
       {dragEnabled && (
         <div
-          className="hidden sm:flex absolute left-2 top-1/2 -translate-y-1/2 z-10 items-center justify-center w-5 opacity-0 group-hover:opacity-30 transition-all cursor-grab active:cursor-grabbing pointer-events-none"
-          style={{ color: 'rgba(241,245,249,0.7)' }}
+          className="hidden sm:flex absolute left-2 top-1/2 -translate-y-1/2 z-10 items-center justify-center w-5 opacity-0 group-hover:opacity-25 transition-opacity cursor-grab active:cursor-grabbing pointer-events-none"
+          style={{ color: 'rgba(241,245,249,0.8)' }}
         >
           <GripIcon />
         </div>
@@ -186,13 +186,15 @@ export function TOTPCard({
 
       {/* ── Glass card ── */}
       <div
-        className="glass-card relative p-5 cursor-pointer select-none"
+        className="glass-card relative cursor-pointer select-none overflow-hidden"
         style={{
           borderRadius: 16,
+          padding: '22px 24px 20px',
           transform: `translateX(${swipeX}px)`,
           transition: swiping ? 'none' : 'transform 0.25s ease',
-          background: `linear-gradient(160deg, ${account.color}0d 0%, rgba(13,20,38,0.75) 45%)`,
-          outline: isDragOver ? '2px solid rgba(0,194,255,0.5)' : '2px solid transparent',
+          // Glassmorphism base + per-account color wash
+          background: `linear-gradient(145deg, ${account.color}14 0%, rgba(15,23,42,0.6) 55%)`,
+          outline: isDragOver ? `2px solid rgba(0,194,255,0.5)` : '2px solid transparent',
           outlineOffset: '-2px',
         }}
         onClick={copyCode}
@@ -200,118 +202,140 @@ export function TOTPCard({
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
-        {/* ── Top row: avatar + issuer/name + countdown ring ── */}
-        {/* Nothing else goes here — countdown ring has the whole right side */}
-        <div className="flex items-start justify-between mb-5">
-          <div className="flex items-center gap-3">
+        {/* Thin color accent — left edge */}
+        <div
+          className="absolute left-0 top-5 bottom-5 w-[2px] rounded-full"
+          style={{ background: account.color, opacity: 0.75 }}
+        />
+
+        {/* ── Top row: identity + ring ── */}
+        <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center gap-3 min-w-0">
+            {/* Avatar */}
             <div
-              className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0"
+              className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-black flex-shrink-0"
               style={{
-                background: `${account.color}18`,
-                border: `1px solid ${account.color}35`,
+                background: `${account.color}1a`,
+                border: `1px solid ${account.color}40`,
                 color: account.color,
+                boxShadow: `0 0 16px ${account.color}25`,
               }}
             >
               {account.issuer.charAt(0).toUpperCase()}
             </div>
-            <div>
-              <p className="text-xs font-bold uppercase tracking-widest leading-tight" style={{ color: account.color }}>
+            {/* Labels */}
+            <div className="min-w-0">
+              <p
+                className="text-xs font-bold uppercase tracking-widest leading-tight truncate"
+                style={{ color: account.color }}
+              >
                 {account.issuer}
               </p>
-              <p className="text-xs mt-0.5" style={{ color: 'rgba(241,245,249,0.42)' }}>
+              <p
+                className="text-xs mt-0.5 truncate"
+                style={{ color: 'rgba(241,245,249,0.38)' }}
+              >
                 {account.name}
               </p>
             </div>
           </div>
-          <CountdownRing progress={progress} secondsLeft={secondsLeft} color={account.color} />
+
+          {/* Countdown ring — larger for premium feel */}
+          <div className="flex-shrink-0 ml-3">
+            <CountdownRing progress={progress} secondsLeft={secondsLeft} color={account.color} size={60} />
+          </div>
         </div>
 
-        {/* ── Bottom row: code  +  [edit][delete] | [copy] ── */}
-        <div className="flex items-end justify-between gap-3">
+        {/* ── Code display ── */}
+        <div className="mb-4">
+          <p
+            style={{
+              color: codesVisible ? codeColor : 'rgba(241,245,249,0.15)',
+              fontSize: '2.75rem',
+              fontWeight: 900,
+              letterSpacing: '0.13em',
+              lineHeight: 1,
+              fontVariantNumeric: 'tabular-nums',
+              textShadow: codesVisible
+                ? isLow
+                  ? '0 0 32px rgba(248,113,113,0.55)'
+                  : `0 0 32px ${account.color}55`
+                : 'none',
+              transition: 'color 0.4s ease, text-shadow 0.4s ease',
+            }}
+          >
+            {codesVisible ? formattedCode : '••• •••'}
+          </p>
 
-          {/* Code digits */}
-          <div className="flex flex-col gap-1">
+          {/* Next code — visible when countdown is low */}
+          {isLow && codesVisible && (
             <p
-              className="tabular-nums font-black flex-shrink-0"
+              className="mt-2 text-xs font-semibold"
               style={{
-                color: codesVisible ? codeColor : 'rgba(241,245,249,0.2)',
-                fontSize: '2.25rem',
-                letterSpacing: '0.1em',
-                lineHeight: 1,
-                textShadow: codesVisible && isLow
-                  ? '0 0 24px rgba(248,113,113,0.45)'
-                  : codesVisible
-                    ? `0 0 24px ${account.color}50`
-                    : 'none',
+                color: 'rgba(241,245,249,0.28)',
+                letterSpacing: '0.09em',
+                fontVariantNumeric: 'tabular-nums',
               }}
             >
-              {codesVisible ? formattedCode : '••• •••'}
+              next&nbsp;&nbsp;{nextCode.slice(0, 3)}&nbsp;{nextCode.slice(3)}
             </p>
-            {isLow && codesVisible && (
-              <p
-                className="tabular-nums font-semibold text-xs"
-                style={{ color: 'rgba(241,245,249,0.3)', letterSpacing: '0.08em' }}
-              >
-                next&nbsp;&nbsp;{nextCode.slice(0, 3)}&nbsp;{nextCode.slice(3)}
-              </p>
-            )}
-          </div>
+          )}
+        </div>
 
-          {/* Action cluster — right side of bottom row */}
-          <div className="flex items-center gap-1.5 flex-shrink-0">
+        {/* ── Bottom row: actions ── */}
+        <div className="flex items-center justify-end gap-1.5">
 
-            {/* Edit — desktop: appears on hover | mobile: always shown */}
-            <button
-              className="sm:opacity-0 sm:group-hover:opacity-100 flex items-center justify-center w-7 h-7 rounded-lg transition-all active:scale-90"
-              style={{
-                background: 'rgba(99,102,241,0.1)',
-                border: '1px solid rgba(99,102,241,0.2)',
-                color: '#818cf8',
-              }}
-              onClick={e => { e.stopPropagation(); onEdit(account.id) }}
-              title="Edit account"
-            >
-              <PencilIcon />
-            </button>
+          {/* Edit — desktop: hover-only; mobile: always */}
+          <button
+            className="sm:opacity-0 sm:group-hover:opacity-100 flex items-center justify-center w-7 h-7 rounded-lg transition-all active:scale-90"
+            style={{
+              background: 'rgba(99,102,241,0.1)',
+              border: '1px solid rgba(99,102,241,0.22)',
+              color: '#818cf8',
+            }}
+            onClick={e => { e.stopPropagation(); onEdit(account.id) }}
+            title="Edit account"
+          >
+            <PencilIcon />
+          </button>
 
-            {/* Delete — always faintly visible, full red on hover */}
-            <button
-              className="flex items-center justify-center w-7 h-7 rounded-lg transition-all active:scale-90"
-              style={{
-                background: 'rgba(220,38,38,0.08)',
-                border: '1px solid rgba(220,38,38,0.18)',
-                color: '#f87171',
-                opacity: 0.35,
-              }}
-              onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
-              onMouseLeave={e => (e.currentTarget.style.opacity = '0.35')}
-              onClick={e => { e.stopPropagation(); onDelete(account.id) }}
-              title="Delete account"
-            >
-              <TrashIcon />
-            </button>
+          {/* Delete */}
+          <button
+            className="flex items-center justify-center w-7 h-7 rounded-lg transition-all active:scale-90"
+            style={{
+              background: 'rgba(220,38,38,0.08)',
+              border: '1px solid rgba(220,38,38,0.18)',
+              color: '#f87171',
+              opacity: 0.35,
+            }}
+            onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
+            onMouseLeave={e => (e.currentTarget.style.opacity = '0.35')}
+            onClick={e => { e.stopPropagation(); onDelete(account.id) }}
+            title="Delete account"
+          >
+            <TrashIcon />
+          </button>
 
-            {/* Divider */}
-            <div className="w-px h-4 mx-0.5 flex-shrink-0" style={{ background: 'rgba(255,255,255,0.1)' }} />
+          {/* Divider */}
+          <div className="w-px h-4 mx-0.5 flex-shrink-0" style={{ background: 'rgba(255,255,255,0.1)' }} />
 
-            {/* Copy */}
-            <div
-              className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all"
-              style={copied ? {
-                background: 'rgba(16,185,129,0.12)',
-                color: '#34d399',
-                border: '1px solid rgba(16,185,129,0.25)',
-              } : {
-                background: 'rgba(255,255,255,0.06)',
-                color: 'rgba(241,245,249,0.45)',
-                border: '1px solid rgba(255,255,255,0.09)',
-              }}
-            >
-              {copied ? <CheckIcon /> : <CopyIcon />}
-              {copied ? 'Copied' : 'Copy'}
-            </div>
-          </div>
-
+          {/* Copy */}
+          <button
+            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all active:scale-95"
+            style={copied ? {
+              background: 'rgba(16,185,129,0.12)',
+              color: '#34d399',
+              border: '1px solid rgba(16,185,129,0.25)',
+            } : {
+              background: 'rgba(255,255,255,0.06)',
+              color: 'rgba(241,245,249,0.45)',
+              border: '1px solid rgba(255,255,255,0.09)',
+            }}
+            onClick={e => { e.stopPropagation(); copyCode() }}
+          >
+            {copied ? <CheckIcon /> : <CopyIcon />}
+            {copied ? 'Copied' : 'Copy'}
+          </button>
         </div>
       </div>
     </div>
