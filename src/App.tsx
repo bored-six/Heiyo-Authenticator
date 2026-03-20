@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
-import { useAccounts } from './hooks/useAccounts'
+import { useVault } from './hooks/useVault'
 import { TOTPCard } from './components/TOTPCard'
 import { AddAccount } from './components/AddAccount'
 import { EditAccount } from './components/EditAccount'
 import { DevModule } from './components/DevModule'
+import { LockScreen } from './components/LockScreen'
 import type { Account } from './types'
 
 type Tab = 'vault' | 'dev'
@@ -108,7 +109,11 @@ const TABS: { key: Tab; label: string; icon: React.ReactNode }[] = [
 ]
 
 export default function App() {
-  const { accounts, addAccount, removeAccount, updateAccount, reorderAccounts } = useAccounts()
+  const {
+    status, accounts, legacyAccounts,
+    createVault, unlock, lock, resetVault,
+    addAccount, removeAccount, updateAccount, reorderAccounts,
+  } = useVault()
   const [tab, setTab]           = useState<Tab>('vault')
   const [showAdd, setShowAdd]   = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -118,6 +123,7 @@ export default function App() {
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
   const importRef = useRef<HTMLInputElement>(null)
 
+  // Must be before any conditional returns (Rules of Hooks)
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.shiftKey && e.key === 'D') setTab('dev')
@@ -126,6 +132,40 @@ export default function App() {
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
   }, [])
+
+  // ── Vault state gates ─────────────────────────────────────────────────────
+  if (status === 'loading') {
+    return (
+      <>
+        <div className="fixed inset-0" style={{ background: '#060b18', zIndex: 0 }}>
+          <div className="bg-glow" />
+        </div>
+        <div className="fixed inset-0 z-10 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <div
+              className="w-14 h-14 rounded-2xl flex items-center justify-center"
+              style={{ background: 'linear-gradient(135deg, #00c2ff, #0090ff)', color: '#060b18' }}
+            >
+              <ShieldIcon size={24} />
+            </div>
+            <p className="text-sm font-medium" style={{ color: 'rgba(241,245,249,0.38)' }}>Loading vault…</p>
+          </div>
+        </div>
+      </>
+    )
+  }
+
+  if (status === 'setup' || status === 'migrating' || status === 'locked') {
+    return (
+      <LockScreen
+        mode={status === 'locked' ? 'unlock' : status === 'migrating' ? 'migrate' : 'setup'}
+        legacyCount={legacyAccounts?.length ?? 0}
+        onCreate={async (password) => createVault(password, status === 'migrating' ? (legacyAccounts ?? []) : [])}
+        onUnlock={unlock}
+        onReset={resetVault}
+      />
+    )
+  }
 
   const filtered = accounts.filter(a =>
     a.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -274,6 +314,22 @@ export default function App() {
 
           <div className="flex-1" />
 
+          {/* Lock vault */}
+          <div className="px-5 pb-3">
+            <button
+              onClick={lock}
+              className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-80"
+              style={{
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(255,255,255,0.06)',
+                color: 'rgba(241,245,249,0.32)',
+              }}
+            >
+              <LockIcon />
+              Lock Vault
+            </button>
+          </div>
+
           {/* Bottom stat */}
           <div className="px-5 pb-7">
             <div
@@ -332,6 +388,14 @@ export default function App() {
               }}>Heiyo Authenticator</h1>
             </div>
             <div className="flex items-center gap-2">
+              <button
+                onClick={lock}
+                className="w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-95"
+                style={iconBtnStyle()}
+                title="Lock vault"
+              >
+                <LockIcon />
+              </button>
               {tab === 'vault' && accounts.length > 0 && (
                 <button
                   onClick={() => setCodesVisible(v => !v)}

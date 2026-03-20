@@ -84,7 +84,7 @@ export function TOTPCard({
   onDragStart, onDragOver, onDrop, onDragEnd,
   dragEnabled,
 }: Props) {
-  const { code, secondsLeft, progress } = useTotp(account.secret)
+  const { code, nextCode, secondsLeft, progress } = useTotp(account.secret)
   const [copied, setCopied] = useState(false)
   const [swipeX, setSwipeX] = useState(0)
   const [swiping, setSwiping] = useState(false)
@@ -106,6 +106,8 @@ export function TOTPCard({
     await navigator.clipboard.writeText(code)
     setCopied(true)
     setTimeout(() => setCopied(false), 1500)
+    // TOTP codes expire every 30s — clear clipboard to avoid stale code exposure
+    setTimeout(() => { navigator.clipboard.writeText('').catch(() => {}) }, 30_000)
   }
 
   const onTouchStart = (e: React.TouchEvent) => {
@@ -227,22 +229,32 @@ export function TOTPCard({
         <div className="flex items-end justify-between gap-3">
 
           {/* Code digits */}
-          <p
-            className="tabular-nums font-black flex-shrink-0"
-            style={{
-              color: codesVisible ? codeColor : 'rgba(241,245,249,0.2)',
-              fontSize: '2.25rem',
-              letterSpacing: '0.1em',
-              lineHeight: 1,
-              textShadow: codesVisible && isLow
-                ? '0 0 24px rgba(248,113,113,0.45)'
-                : codesVisible
-                  ? `0 0 24px ${account.color}50`
-                  : 'none',
-            }}
-          >
-            {codesVisible ? formattedCode : '••• •••'}
-          </p>
+          <div className="flex flex-col gap-1">
+            <p
+              className="tabular-nums font-black flex-shrink-0"
+              style={{
+                color: codesVisible ? codeColor : 'rgba(241,245,249,0.2)',
+                fontSize: '2.25rem',
+                letterSpacing: '0.1em',
+                lineHeight: 1,
+                textShadow: codesVisible && isLow
+                  ? '0 0 24px rgba(248,113,113,0.45)'
+                  : codesVisible
+                    ? `0 0 24px ${account.color}50`
+                    : 'none',
+              }}
+            >
+              {codesVisible ? formattedCode : '••• •••'}
+            </p>
+            {isLow && codesVisible && (
+              <p
+                className="tabular-nums font-semibold text-xs"
+                style={{ color: 'rgba(241,245,249,0.3)', letterSpacing: '0.08em' }}
+              >
+                next&nbsp;&nbsp;{nextCode.slice(0, 3)}&nbsp;{nextCode.slice(3)}
+              </p>
+            )}
+          </div>
 
           {/* Action cluster — right side of bottom row */}
           <div className="flex items-center gap-1.5 flex-shrink-0">
