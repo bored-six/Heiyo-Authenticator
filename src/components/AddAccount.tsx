@@ -1,6 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Html5QrcodeScanner } from 'html5-qrcode'
-import { useEffect, useRef } from 'react'
 
 interface Props {
   onAdd: (name: string, issuer: string, secret: string) => void
@@ -24,7 +23,7 @@ function parseOtpAuthUri(uri: string) {
 
 function QrIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <rect x="3" y="3" width="7" height="7" />
       <rect x="14" y="3" width="7" height="7" />
       <rect x="3" y="14" width="7" height="7" />
@@ -35,21 +34,29 @@ function QrIcon() {
 
 function EditIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
       <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
     </svg>
   )
 }
 
+function XIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M18 6L6 18M6 6l12 12" />
+    </svg>
+  )
+}
+
 export function AddAccount({ onAdd, onClose }: Props) {
-  const [tab, setTab] = useState<'manual' | 'scan'>('manual')
-  const [name, setName] = useState('')
+  const [tab, setTab]       = useState<'manual' | 'scan'>('manual')
+  const [name, setName]     = useState('')
   const [issuer, setIssuer] = useState('')
   const [secret, setSecret] = useState('')
-  const [error, setError] = useState('')
+  const [error, setError]   = useState('')
   const scannerRef = useRef<Html5QrcodeScanner | null>(null)
-  const scanDivId = 'qr-scanner'
+  const scanDivId  = 'qr-scanner'
 
   useEffect(() => {
     if (tab === 'scan') {
@@ -74,14 +81,12 @@ export function AddAccount({ onAdd, onClose }: Props) {
         )
       }, 100)
     }
-    return () => {
-      scannerRef.current?.clear().catch(() => {})
-    }
+    return () => { scannerRef.current?.clear().catch(() => {}) }
   }, [tab])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    if (!name.trim()) return setError('Account name is required')
+    if (!name.trim())   return setError('Account name is required')
     if (!secret.trim()) return setError('Secret key is required')
     onAdd(name.trim(), issuer.trim() || name.trim(), secret.trim())
     onClose()
@@ -89,50 +94,57 @@ export function AddAccount({ onAdd, onClose }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center"
-      style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+      style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
       onClick={onClose}
     >
       <div
-        className="w-full max-w-sm rounded-t-3xl p-6 pb-10"
+        className="w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl p-6 pb-10 sm:pb-6"
         style={{
-          background: 'rgba(248,246,255,0.97)',
-          backdropFilter: 'blur(32px) saturate(160%)',
-          WebkitBackdropFilter: 'blur(32px) saturate(160%)',
-          border: '1px solid rgba(139,92,246,0.15)',
+          background: 'rgba(13, 20, 38, 0.97)',
+          backdropFilter: 'blur(40px)',
+          WebkitBackdropFilter: 'blur(40px)',
+          border: '1px solid rgba(255,255,255,0.09)',
           borderBottom: 'none',
-          boxShadow: '0 -8px 48px rgba(139,92,246,0.12)',
+          boxShadow: '0 -8px 48px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,194,255,0.06)',
         }}
         onClick={e => e.stopPropagation()}
       >
-        {/* Handle */}
-        <div
-          className="w-10 h-1 rounded-full mx-auto mb-6"
-          style={{ background: 'rgba(139,92,246,0.2)' }}
-        />
+        {/* Mobile drag handle */}
+        <div className="sm:hidden w-10 h-1 rounded-full mx-auto mb-5" style={{ background: 'rgba(255,255,255,0.15)' }} />
 
-        <h2 className="font-bold text-lg mb-4" style={{ color: '#1e1b4b' }}>Add Account</h2>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="font-bold text-lg" style={{ color: '#f1f5f9' }}>Add Account</h2>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:opacity-80"
+            style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.09)', color: 'rgba(241,245,249,0.5)' }}
+          >
+            <XIcon />
+          </button>
+        </div>
 
         {/* Tab switcher */}
         <div
-          className="flex gap-1.5 mb-5 p-1 rounded-xl"
-          style={{ background: 'rgba(255,255,255,0.6)', border: '1px solid rgba(139,92,246,0.12)' }}
+          className="flex gap-1 mb-5 p-1 rounded-xl"
+          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
         >
           {([
             ['manual', 'Manual Entry', <EditIcon />] as const,
-            ['scan', 'Scan QR', <QrIcon />] as const,
+            ['scan',   'Scan QR',      <QrIcon />]   as const,
           ]).map(([t, label, icon]) => (
             <button
               key={t}
               onClick={() => setTab(t)}
               className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-all"
               style={tab === t ? {
-                background: 'linear-gradient(135deg, rgba(167,139,250,0.25), rgba(129,140,248,0.25))',
-                color: '#7c3aed',
-                border: '1px solid rgba(139,92,246,0.25)',
+                background: 'rgba(0,194,255,0.12)',
+                color: '#00c2ff',
+                border: '1px solid rgba(0,194,255,0.2)',
               } : {
                 background: 'transparent',
-                color: 'rgba(30,27,75,0.4)',
+                color: 'rgba(241,245,249,0.38)',
                 border: '1px solid transparent',
               }}
             >
@@ -144,37 +156,47 @@ export function AddAccount({ onAdd, onClose }: Props) {
 
         {tab === 'manual' ? (
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-            <input
-              type="text"
-              placeholder="Account name (e.g. john@gmail.com)"
-              value={name}
-              onChange={e => setName(e.target.value)}
-              className="aurora-input w-full rounded-xl px-4 py-3 text-sm"
-            />
-            <input
-              type="text"
-              placeholder="Issuer (e.g. Google, GitHub)"
-              value={issuer}
-              onChange={e => setIssuer(e.target.value)}
-              className="aurora-input w-full rounded-xl px-4 py-3 text-sm"
-            />
-            <input
-              type="text"
-              placeholder="Secret key"
-              value={secret}
-              onChange={e => setSecret(e.target.value)}
-              className="aurora-input w-full rounded-xl px-4 py-3 text-sm font-mono"
-              autoComplete="off"
-            />
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium px-1" style={{ color: 'rgba(241,245,249,0.45)' }}>Account name</label>
+              <input
+                type="text"
+                placeholder="e.g. john@gmail.com"
+                value={name}
+                onChange={e => { setName(e.target.value); setError('') }}
+                className="aurora-input w-full rounded-xl px-4 py-3 text-sm"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium px-1" style={{ color: 'rgba(241,245,249,0.45)' }}>Issuer</label>
+              <input
+                type="text"
+                placeholder="e.g. Google, GitHub, Dropbox"
+                value={issuer}
+                onChange={e => setIssuer(e.target.value)}
+                className="aurora-input w-full rounded-xl px-4 py-3 text-sm"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium px-1" style={{ color: 'rgba(241,245,249,0.45)' }}>Secret key</label>
+              <input
+                type="text"
+                placeholder="Base32 secret from your service"
+                value={secret}
+                onChange={e => { setSecret(e.target.value); setError('') }}
+                className="aurora-input w-full rounded-xl px-4 py-3 text-sm font-mono"
+                autoComplete="off"
+              />
+            </div>
             {error && (
-              <p className="text-red-400 text-xs px-1">{error}</p>
+              <p className="text-xs px-1" style={{ color: '#f87171' }}>{error}</p>
             )}
             <button
               type="submit"
-              className="w-full py-3 rounded-xl font-semibold text-white mt-1 transition-all active:scale-[0.98]"
+              className="w-full py-3 rounded-xl font-bold text-sm mt-1 transition-all hover:opacity-90 active:scale-[0.98]"
               style={{
-                background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                boxShadow: '0 4px 20px rgba(99,102,241,0.4)',
+                background: 'linear-gradient(135deg, #00c2ff 0%, #0090ff 100%)',
+                boxShadow: '0 4px 20px rgba(0,194,255,0.3)',
+                color: '#060b18',
               }}
             >
               Add Account
@@ -183,8 +205,8 @@ export function AddAccount({ onAdd, onClose }: Props) {
         ) : (
           <div>
             <div id={scanDivId} className="rounded-xl overflow-hidden" />
-            {error && <p className="text-red-400 text-xs mt-2">{error}</p>}
-            <p className="text-xs text-center mt-3" style={{ color: 'rgba(30,27,75,0.4)' }}>
+            {error && <p className="text-xs mt-2" style={{ color: '#f87171' }}>{error}</p>}
+            <p className="text-xs text-center mt-3" style={{ color: 'rgba(241,245,249,0.35)' }}>
               Point your camera at a 2FA QR code
             </p>
           </div>
