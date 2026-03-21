@@ -600,7 +600,7 @@ export default function App() {
       {/* ── Modals ── */}
       <AnimatePresence>
         {showAdd && (
-          <AddAccount onAdd={addAccount} onClose={() => setShowAdd(false)} />
+          <AddAccount onAdd={addAccount} onClose={() => setShowAdd(false)} accounts={accounts} />
         )}
       </AnimatePresence>
       <AnimatePresence>
