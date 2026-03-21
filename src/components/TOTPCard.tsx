@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { motion } from 'framer-motion'
 import type { Account } from '../types'
 import { useTotp } from '../hooks/useTotp'
 import { CountdownRing } from './CountdownRing'
@@ -9,6 +10,7 @@ interface Props {
   clockOffset: number
   onDelete: (id: string) => void
   onEdit: (id: string) => void
+  onCopied: () => void
   isDragging: boolean
   isDragOver: boolean
   onDragStart: () => void
@@ -80,7 +82,7 @@ function GripIcon() {
 
 export function TOTPCard({
   account, codesVisible, clockOffset,
-  onDelete, onEdit,
+  onDelete, onEdit, onCopied,
   isDragging, isDragOver,
   onDragStart, onDragOver, onDrop, onDragEnd,
   dragEnabled,
@@ -106,6 +108,8 @@ export function TOTPCard({
       return
     }
     await navigator.clipboard.writeText(code)
+    window.navigator.vibrate?.(10)
+    onCopied()
     setCopied(true)
     setTimeout(() => setCopied(false), 1500)
     setTimeout(() => { navigator.clipboard.writeText('').catch(() => {}) }, 30_000)
@@ -147,14 +151,17 @@ export function TOTPCard({
   }
 
   return (
-    <div
+    <motion.div
       className="rounded-2xl overflow-hidden"
       draggable={dragEnabled}
       onDragStart={dragEnabled ? (e) => { e.dataTransfer.effectAllowed = 'move'; onDragStart() } : undefined}
       onDragOver={dragEnabled ? (e) => { e.preventDefault(); onDragOver() } : undefined}
       onDrop={dragEnabled ? (e) => { e.preventDefault(); onDrop() } : undefined}
       onDragEnd={dragEnabled ? onDragEnd : undefined}
-      style={{ opacity: isDragging ? 0.4 : 1, transition: 'opacity 0.15s' }}
+      style={{ opacity: isDragging ? 0.4 : 1 }}
+      whileHover={{ scale: 1.015 }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
     >
       {/* Mobile swipe-to-delete panel */}
       <div
@@ -262,7 +269,12 @@ export function TOTPCard({
 
           {/* CENTER: Code */}
           <div style={{ flex: 1, minWidth: 0 }}>
-            <p
+            <motion.p
+              animate={isLow && codesVisible ? { scale: [1, 1.02, 1] } : { scale: 1 }}
+              transition={isLow && codesVisible
+                ? { duration: 1, repeat: Infinity, ease: 'easeInOut' }
+                : { duration: 0.3 }
+              }
               style={{
                 color: codesVisible ? codeColor : 'rgba(241,245,249,0.12)',
                 fontSize: 'clamp(1.875rem, 5vw, 3rem)',
@@ -276,10 +288,11 @@ export function TOTPCard({
                     : `0 0 28px ${account.color}45`
                   : 'none',
                 transition: 'color 0.4s ease',
+                display: 'block',
               }}
             >
               {codesVisible ? formattedCode : '••• •••'}
-            </p>
+            </motion.p>
 
             {isLow && codesVisible && (
               <p
@@ -407,6 +420,6 @@ export function TOTPCard({
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   )
 }

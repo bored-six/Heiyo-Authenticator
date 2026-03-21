@@ -81,7 +81,6 @@ body {
   box-shadow:
     0 16px 48px rgba(0, 0, 0, 0.75),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  transform: translateY(-2px);
 }
 
 /* ── Glow primary button ── */
@@ -135,6 +134,11 @@ body {
 }
 
 /* ── Animations ── */
+@keyframes pulse-ring-red {
+  0%, 100% { filter: drop-shadow(0 0 5px rgba(239, 68, 68, 0.4)); }
+  50%       { filter: drop-shadow(0 0 18px rgba(239, 68, 68, 0.95)); }
+}
+
 @keyframes mascotFloat {
   0%, 100% { transform: translateY(0px);   }
   50%       { transform: translateY(-7px); }

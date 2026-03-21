@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useVault } from './hooks/useVault'
 import { useClockSync } from './hooks/useClockSync'
 import { TOTPCard } from './components/TOTPCard'
+import { Toast } from './components/Toast'
 import { AddAccount } from './components/AddAccount'
 import { EditAccount } from './components/EditAccount'
 import { DevModule } from './components/DevModule'
@@ -13,10 +14,10 @@ import type { Account } from './types'
 // ── Framer Motion variants ──────────────────────────────────────────────────
 const listVariants = {
   hidden: {},
-  show: { transition: { staggerChildren: 0.06 } },
+  show: { transition: { staggerChildren: 0.05 } },
 }
 const itemVariants = {
-  hidden: { opacity: 0, y: 16 },
+  hidden: { opacity: 0, y: 20 },
   show:   { opacity: 1, y: 0, transition: { duration: 0.32, ease: 'easeOut' as const } },
 }
 
@@ -199,7 +200,15 @@ export default function App() {
   const [codesVisible, setCodesVisible] = useState(true)
   const [dragIndex, setDragIndex]       = useState<number | null>(null)
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
+  const [toastVisible, setToastVisible] = useState(false)
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const importRef = useRef<HTMLInputElement>(null)
+
+  const handleCopied = useCallback(() => {
+    if (toastTimer.current) clearTimeout(toastTimer.current)
+    setToastVisible(true)
+    toastTimer.current = setTimeout(() => setToastVisible(false), 2000)
+  }, [])
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -572,6 +581,7 @@ export default function App() {
                         clockOffset={clockSync.offset}
                         onDelete={removeAccount}
                         onEdit={setEditingId}
+                        onCopied={handleCopied}
                         isDragging={dragIndex === index}
                         isDragOver={dragOverIndex === index && dragIndex !== index}
                         onDragStart={() => handleDragStart(index)}
@@ -596,6 +606,9 @@ export default function App() {
           )}
         </div>
       </main>
+
+      {/* ── Toast ── */}
+      <Toast visible={toastVisible} />
 
       {/* ── Modals ── */}
       <AnimatePresence>

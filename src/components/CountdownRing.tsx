@@ -20,7 +20,10 @@ export function CountdownRing({ progress, secondsLeft, color, size = 44 }: Props
         width={size}
         height={size}
         className="-rotate-90"
-        style={{ filter: `drop-shadow(0 0 6px ${strokeColor}90)` }}
+        style={isLow
+          ? { animation: 'pulse-ring-red 1s ease-in-out infinite' }
+          : { filter: `drop-shadow(0 0 6px ${strokeColor}90)` }
+        }
       >
         {/* Background track */}
         <circle
