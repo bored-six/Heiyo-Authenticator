@@ -213,7 +213,7 @@ export default function App() {
   // Keyboard shortcuts
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.shiftKey && e.key === 'D') setTab('dev')
+      if (import.meta.env.DEV && e.shiftKey && e.key === 'D') setTab('dev')
       if (e.shiftKey && e.key === 'V') setTab('vault')
     }
     window.addEventListener('keydown', handler)
@@ -380,11 +380,13 @@ export default function App() {
           <span className="hidden xs:inline sm:inline">My Codes</span>
         </button>
 
-        {/* Tab: Dev Tools */}
-        <button style={pillTab(tab === 'dev')} onClick={() => setTab('dev')}>
-          <CodeIcon size={13} />
-          <span className="hidden sm:inline">Dev</span>
-        </button>
+        {/* Tab: Dev Tools — hidden in production */}
+        {import.meta.env.DEV && (
+          <button style={pillTab(tab === 'dev')} onClick={() => setTab('dev')}>
+            <CodeIcon size={13} />
+            <span className="hidden sm:inline">Dev</span>
+          </button>
+        )}
 
         {/* Divider */}
         <div style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.08)', margin: '0 4px', flexShrink: 0 }} />
@@ -597,8 +599,8 @@ export default function App() {
             </>
           )}
 
-          {/* ── Dev tab ── */}
-          {tab === 'dev' && (
+          {/* ── Dev tab — dev only ── */}
+          {import.meta.env.DEV && tab === 'dev' && (
             <div>
               <h1 className="font-bold text-xl mb-6" style={{ color: '#f1f5f9' }}>Developer Tools</h1>
               <DevModule />
