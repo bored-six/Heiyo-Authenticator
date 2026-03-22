@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import React, { useState, useRef } from 'react'
 import { motion } from 'framer-motion'
 import type { Account } from '../types'
 import { useTotp } from '../hooks/useTotp'
@@ -154,7 +154,7 @@ export function TOTPCard({
     <motion.div
       className="rounded-2xl overflow-hidden"
       draggable={dragEnabled}
-      onDragStart={dragEnabled ? (e) => { e.dataTransfer.effectAllowed = 'move'; onDragStart() } : undefined}
+      onDragStart={dragEnabled ? (e) => { (e as unknown as React.DragEvent<HTMLDivElement>).dataTransfer.effectAllowed = 'move'; onDragStart() } : undefined}
       onDragOver={dragEnabled ? (e) => { e.preventDefault(); onDragOver() } : undefined}
       onDrop={dragEnabled ? (e) => { e.preventDefault(); onDrop() } : undefined}
       onDragEnd={dragEnabled ? onDragEnd : undefined}
