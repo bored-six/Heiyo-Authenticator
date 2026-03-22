@@ -1,73 +1,72 @@
-# React + TypeScript + Vite
+# Heiyo Authenticator
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A privacy-first 2FA code manager that runs entirely in your browser. No servers, no accounts, no data leaving your device.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## What it does
 
-## React Compiler
+Heiyo generates time-based one-time passwords (TOTP) — the 6-digit codes used by apps like Google, GitHub, Stripe, and thousands of others when you enable two-factor authentication.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Every code is generated locally using the industry-standard RFC 6238 algorithm. Nothing is sent over the network.
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Key features
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- **Encrypted vault** — your secrets are protected by a master password using AES-GCM encryption before being stored in the browser
+- **QR code scanning** — point your camera at a QR code to add an account instantly
+- **Manual entry** — paste or type a secret key directly if you prefer
+- **Live countdown** — a radial timer shows exactly when each code expires (30-second window)
+- **Copy to clipboard** — tap any card to copy the current code
+- **Backup & restore** — export an encrypted backup file and import it on any device
+- **Clock sync** — automatically detects and corrects for system clock drift so codes are always valid
+- **Offline-ready** — works with no internet connection once loaded
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+---
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Privacy model
+
+| What happens | Detail |
+|---|---|
+| Secrets stored | Encrypted in `localStorage`, never sent anywhere |
+| Master password | Never stored — used only to derive the encryption key |
+| Network requests | None after initial page load |
+| Analytics / tracking | None |
+
+---
+
+## Adding your first account
+
+1. Open the app and create a vault with a master password
+2. Click **+** in the top nav
+3. Either scan the QR code shown by your service, or paste the secret key manually
+4. Your account appears immediately with a live code
+
+---
+
+## Backup your vault
+
+Go to **My Codes** and click the export icon in the toolbar. This downloads an encrypted `.json` file. To restore, click the import icon and select the file — you'll need your original master password to unlock it.
+
+---
+
+## Running locally
+
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Requires Node 18+. Opens at `http://localhost:5173`.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run build    # production build → dist/
+npm run preview  # preview the production build locally
 ```
+
+---
+
+## Tech
+
+React 19 · TypeScript · Vite · Tailwind CSS · otplib · Framer Motion · Web Crypto API
